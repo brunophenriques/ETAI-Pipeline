@@ -2,6 +2,29 @@
 
 # 20231608 Bruno Henriques
 
+### WEEKLY CHALLENGES
+
+*Week 2*:
+DT:   Train accuracy: 0.829
+      Test accuracy:  0.627
+      (Slight overfit, without any parameters, wouldn't be a good model to use)
+
+DT with  max_depth: 5 | min_samples_split: 10 | min_samples_leaf: 5 
+      Train accuracy: 0.679
+      Test accuracy:  0.669
+
+LR with max_iter1000:
+    Train accuracy: 0.679
+    Test accuracy:  0.679
+
+Our current best model is the simple Linear Regression with max_iter 1000, since it performs better by 0.01 our modified DT and since it doesnt present to us any signs of overfit, or any sign that is way worse than the slight less accurate DT, we can say the LR is the one that wins this bout.
+
+___
+
+## `END OF THIS WEEK CHALLENGES HAVE A NICE WEEKEND`
+___
+
+
 This is the **starting point** for your semester project: a small but *complete* predictive pipeline -- every piece a real project needs (entry point, config, data loading, preprocessing, model, evaluation), just kept as simple as possible for now.
 
 The task: predict two-year recidivism using ProPublica's COMPAS
