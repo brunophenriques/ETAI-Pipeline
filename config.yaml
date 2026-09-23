@@ -7,6 +7,32 @@ data:
   sensitive_attr: "race"          # excluded from model features, used only to audit fairness
   drop_columns: ["id", "decile_score", "score_text"]  # identifiers / COMPAS's own score, not our model's inputs
 
+diagnostics:
+  placeholder_tokens: ["-", "?", "n/a", "N/A", "na", "NA", ""]
+  numerical_columns: ["priors_count", "priors_offenses"]
+  canonical_categories:
+    sex:
+      male :  "Male"
+      female : "Female"
+    c_charge_degree:
+      F: "f"
+      felony: "f"
+      M: "m"
+      misdemeanor: "m"
+    score_text:
+      Low: "Low"
+      Medium: "Medium"
+      High: "High"
+    race:
+      African-American: "African-American"
+      African American: "African-American"
+      Asian: "Asian"
+      Caucasian: "Caucasian"
+      Hispanic: "Hispanic"
+      Native American: "Native American"
+      Other: "Other"
+
+    
 split:
   test_size: 0.2
   random_state: 42

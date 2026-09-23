@@ -13,6 +13,42 @@ One thing that is NOT naive, on purpose: `sensitive_attr` (race) is kept out of 
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+def standardize_categories(df: pd.DataFrame, columns_map: dict, placeholder_tokens: list) -> pd.DataFrame:
+    """
+    Standardize the categories in specified columns of a DataFrame.
+
+    Args:
+        df (pd.DataFrame): The input DataFrame.
+        columns_map (dict): A dictionary mapping column names to their canonical categories.
+
+    Returns:
+        pd.DataFrame: The DataFrame with standardized categories in the specified column.
+    """
+    # Example standardization logic (to be replaced with actual logic)
+    out =df.copy()
+
+    for column, y in columns_map.items():
+        if column not in out.columns:
+            continue
+        cleaned_column = out[column].astype(str).str.strip()
+        lowercased_column = cleaned_column.str.lower()
+        out[column] = lowercased_column.map(y).fillna(lowercased_column)
+        out.loc[out[column].astype(str).str.strip().isin(placeholder_tokens), col] = np.nan
+
+    return out
+
+def clean_dataset(df: pd.DataFrame, diagnostics_config: dict) -> pd.DataFrame:
+    """
+    Clean the dataset by removing rows with missing values and logging the number of removed rows. Also applies the diagnosis
+
+    Args:
+        df (pd.DataFrame): The input DataFrame to clean.
+        diagnostics (dict): A dictionary to store diagnostic information.
+
+    Returns:
+        pd.DataFrame: The cleaned DataFrame with no missing values.
+    """
+
 
 def preprocess(
     df: pd.DataFrame,
