@@ -4,44 +4,113 @@
 data:
   path: "data/compas_two_year_recidivism.csv"
   target: "two_year_recid"
-  sensitive_attr: "race"          # excluded from model features, used only to audit fairness
-  drop_columns: ["id", "decile_score", "score_text"]  # identifiers / COMPAS's own score, not our model's inputs
+  sensitive_attr: "race"  # excluded from model features, used only to audit fairness
+
+  # Columns excluded from the model itself
+  drop_columns:
+    - "id"
+    - "decile_score"
+    - "score_text"
+
 
 diagnostics:
-  placeholder_tokens: ["-", "?", "n/a", "N/A", "na", "NA", ""]
-  numerical_columns: ["priors_count", "priors_offenses"]
+  id_column: "id"
+
+  # Values that should be interpreted as missing
+  placeholder_tokens:
+    - ""
+    - "-"
+    - "?"
+    - "N/A"
+    - "NA"
+    - "n/a"
+    - "na"
+
+  # Missingness classification found during diagnostics
+  missingness_verdicts:
+    age: "MCAR"
+    juv_fel_count: "MCAR"
+    priors_count: "MNAR"
+    c_charge_degree: "MNAR"
+    race: "MCAR"
+    sex: "MCAR"
+
+  # Valid ranges for numerical variables
+  validity_rules:
+    age:
+      min: 18
+      max: 100
+
+    decile_score:
+      min: 1
+      max: 10
+
+    juv_fel_count:
+      min: 0
+
+    priors_count:
+      min: 0
+      max: 60
+
+  # Columns that should contain numerical values
+  numerical_columns:
+    - "age"
+    - "decile_score"
+    - "juv_fel_count"
+    - "priors_count"
+
+  # Standard mappings for categorical values.
+  # Preprocessing can lowercase values first, then apply these mappings.
   canonical_categories:
     sex:
-      male :  "Male"
-      female : "Female"
-    c_charge_degree:
-      F: "f"
-      felony: "f"
-      M: "m"
-      misdemeanor: "m"
-    score_text:
-      Low: "Low"
-      Medium: "Medium"
-      High: "High"
-    race:
-      African-American: "African-American"
-      African American: "African-American"
-      Asian: "Asian"
-      Caucasian: "Caucasian"
-      Hispanic: "Hispanic"
-      Native American: "Native American"
-      Other: "Other"
+      male: "Male"
+      female: "Female"
 
-    
+    c_charge_degree:
+      f: "F"
+      felony: "F"
+      m: "M"
+      misdemeanor: "M"
+
+    score_text:
+      low: "Low"
+      medium: "Medium"
+      high: "High"
+
+    race:
+      african-american: "African-American"
+      african american: "African-American"
+      asian: "Asian"
+      caucasian: "Caucasian"
+      hispanic: "Hispanic"
+      native american: "Native American"
+      other: "Other"
+
+  # Columns identified during diagnostics as redundant/unnecessary
+  columns_to_drop:
+    - "prior_offenses"
+    - "age_in_months"
+    - "juvenile_total"
+    - "id"
+
+  # Duplicate information found in the raw dataset
+  duplicate_check:
+    exact_row_duplicates: 72
+    repeated_ids: 72
+
+
 split:
   test_size: 0.2
   random_state: 42
 
+
 model:
-  type: "decision_tree"   # or "decision_tree"
+  type: "decision_tree"  # or "logistic_regression"
   params:
     max_depth: 5
     min_samples_split: 10
-    min_samples_leaf: 5 
+    min_samples_leaf: 5
+
+
 output:
-  results_dir: "results"   # each run's full report is saved here as a timestamped .txt file
+  results_dir: "results"  # each run's full report is saved here as a timestamped .txt file
