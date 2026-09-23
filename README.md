@@ -22,7 +22,6 @@ Our current best model is the simple Linear Regression with max_iter 1000, since
 ___
 
 ## `END OF THIS WEEK CHALLENGES HAVE A NICE WEEKEND`
-___
 
 
 This is the **starting point** for your semester project: a small but *complete* predictive pipeline -- every piece a real project needs (entry point, config, data loading, preprocessing, model, evaluation), just kept as simple as possible for now.
