@@ -26,7 +26,6 @@ def main():
     config = load_config()
 
     df = load_data(config["data"]["path"])
-
     X_train, X_test, y_train, y_test, extras_test = preprocess(
         df,
         target=config["data"]["target"],

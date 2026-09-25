@@ -11,6 +11,7 @@ You will replace this with something better in the coming weeks.
 One thing that is NOT naive, on purpose: `sensitive_attr` (race) is kept out of the model's input features entirely. It's split alongside the data so it's still available afterwards -- not to train on, but to check whether the model treats different groups differently. See src/evaluate.py:fairness_report.
 """
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 
 def standardize_categories(df: pd.DataFrame, columns_map: dict, placeholder_tokens: list) -> pd.DataFrame:
@@ -20,6 +21,7 @@ def standardize_categories(df: pd.DataFrame, columns_map: dict, placeholder_toke
     Args:
         df (pd.DataFrame): The input DataFrame.
         columns_map (dict): A dictionary mapping column names to their canonical categories.
+        placeholder_tokens (list): A list of tokens to be replaced with NaN.
 
     Returns:
         pd.DataFrame: The DataFrame with standardized categories in the specified column.
@@ -33,7 +35,7 @@ def standardize_categories(df: pd.DataFrame, columns_map: dict, placeholder_toke
         cleaned_column = out[column].astype(str).str.strip()
         lowercased_column = cleaned_column.str.lower()
         out[column] = lowercased_column.map(y).fillna(lowercased_column)
-        out.loc[out[column].astype(str).str.strip().isin(placeholder_tokens), col] = np.nan
+        out.loc[out[column].astype(str).str.strip().isin(placeholder_tokens), column] = np.nan
 
     return out
 
@@ -48,6 +50,15 @@ def clean_dataset(df: pd.DataFrame, diagnostics_config: dict) -> pd.DataFrame:
     Returns:
         pd.DataFrame: The cleaned DataFrame with no missing values.
     """
+
+    out = df.copy()
+    placeholder_tokens = diagnostics_config.get("placeholder_tokens", [])
+
+    for col in diagnostics_config.get("numeric_text_columns", []):
+        if col in out.columns:
+            out[col] = pd.to_numeric(out[col].replace(list(placeholder_tokens), np.nan), errors="coerce")
+
+    # Apply validity rules
 
 
 def preprocess(

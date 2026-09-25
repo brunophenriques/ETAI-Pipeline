@@ -153,9 +153,36 @@ def valid_numerical_ranges(df: pd.DataFrame, diagnostics_config: dict) -> pd.Dat
 
     return out
 
-def canonicalize_categories(df: pd.DataFrame, diagnostics_config: dict) -> pd.DataFrame:
+def canonicalize_categories(
+    df: pd.DataFrame,
+    diagnostics_config: dict
+) -> pd.DataFrame:
+    """
+    Normalize categorical values and convert them to their canonical form.
+
+    Example:
+        "  MALE " -> "male" -> "Male"
+        " Felony " -> "felony" -> "F"
+    """
     out = df.copy()
-    canonical_categories = diagnostics_config.get("canonical_categories", {})
+    canonical_categories = diagnostics_config.get(
+        "canonical_categories", {}
+    )
+
+    for col, mapping in canonical_categories.items():
+        if col not in out.columns:
+            continue
+
+        out[col] = (
+            out[col]
+            .astype("string")
+            .str.strip()
+            .str.lower()
+            .str.replace(r"\s+", " ", regex=True)
+            .replace(mapping)
+        )
+
+    return out
 
 def preprocess(
     df: pd.DataFrame,
