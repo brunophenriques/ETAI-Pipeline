@@ -1,12 +1,12 @@
 # Baseline pipeline configuration.
-# Nothing here is hardcoded in the source files below -- everything tunable lives in this one place.
+# Everything tunable is kept in this configuration file.
 
 data:
   path: "data/compas_two_year_recidivism.csv"
   target: "two_year_recid"
-  sensitive_attr: "race"  # excluded from model features, used only to audit fairness
+  sensitive_attr: "race"
 
-  # Columns excluded from the model itself
+  # Columns excluded from the model features
   drop_columns:
     - "id"
     - "decile_score"
@@ -16,7 +16,7 @@ data:
 diagnostics:
   id_column: "id"
 
-  # Values that should be interpreted as missing
+  # Values interpreted as missing
   placeholder_tokens:
     - ""
     - "-"
@@ -59,8 +59,7 @@ diagnostics:
     - "juv_fel_count"
     - "priors_count"
 
-  # Standard mappings for categorical values.
-  # Preprocessing can lowercase values first, then apply these mappings.
+  # Standard mappings for categorical values
   canonical_categories:
     sex:
       male: "Male"
@@ -86,17 +85,34 @@ diagnostics:
       native american: "Native American"
       other: "Other"
 
-  # Columns identified during diagnostics as redundant/unnecessary
+  # Redundant or unnecessary columns
   columns_to_drop:
     - "prior_offenses"
     - "age_in_months"
     - "juvenile_total"
     - "id"
 
-  # Duplicate information found in the raw dataset
+  # Duplicate information found during diagnostics
   duplicate_check:
     exact_row_duplicates: 72
     repeated_ids: 72
+
+
+preprocessing:
+  # Median for age, juv_fel_count, and priors_count
+  numerical_imputation: "median"
+
+  # Mode for sex and c_charge_degree
+  categorical_imputation: "most_frequent"
+
+  # MNAR columns that require missingness indicators
+  missing_indicator_columns:
+    - "priors_count"
+    - "c_charge_degree"
+
+  # Fairness columns kept outside the model that require mode imputation
+  extra_columns_to_impute:
+    - "race"
 
 
 split:
@@ -105,12 +121,11 @@ split:
 
 
 model:
-  type: "decision_tree"  # or "logistic_regression"
+  type: "logistic_regression"
   params:
-    max_depth: 5
-    min_samples_split: 10
-    min_samples_leaf: 5
+    max_iter: 1000
+    solver: "lbfgs"
 
 
 output:
-  results_dir: "results"  # each run's full report is saved here as a timestamped .txt file
+  results_dir: "results"

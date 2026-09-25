@@ -184,32 +184,87 @@ def canonicalize_categories(
 
     return out
 
-def preprocess(
+def remove_duplicates(
     df: pd.DataFrame,
-    target: str,
-    sensitive_attr: str,
-    drop_columns: list,
-    test_size: float,
-    random_state: int,
-):
-    # naive: just drop rows with any missing values
-    df = df.dropna()
+    diagnostics_config: dict
+) -> pd.DataFrame:
+    """
+    Remove exact duplicate rows and rows with repeated identifiers.
 
-    y = df[target]
+    The first occurrence of each duplicate row or identifier is preserved.
 
-    # kept aside for fairness auditing after training -- never used as a model input
-    extras = df[[sensitive_attr, "score_text"]].copy()
+    Args:
+        df (pd.DataFrame): The input DataFrame.
+        diagnostics_config (dict): Dictionary containing diagnostic information.
 
-    columns_to_exclude = [target, sensitive_attr] + [
-        c for c in drop_columns if c in df.columns
-    ]
-    X = df.drop(columns=columns_to_exclude)
+    Returns:
+        pd.DataFrame: DataFrame without duplicate rows or repeated identifiers.
+    """
+    out = df.copy()
 
-    # naive: one-hot encode all non-numeric columns, no further thought
-    X = pd.get_dummies(X, drop_first=True)
+    # Remove exact duplicate rows
+    out = out.drop_duplicates(keep="first")
 
-    X_train, X_test, y_train, y_test, extras_train, extras_test = train_test_split(
-        X, y, extras, test_size=test_size, random_state=random_state, stratify=y
+    # Remove rows with repeated identifiers
+    id_column = diagnostics_config.get("id_column")
+
+    if id_column and id_column in out.columns:
+        out = out.drop_duplicates(
+            subset=id_column,
+            keep="first"
+        )
+
+    return out
+
+def drop_redundant_columns(
+    df: pd.DataFrame,
+    diagnostics_config: dict
+) -> pd.DataFrame:
+    """
+    Remove redundant or unnecessary columns specified in the configuration.
+
+    Args:
+        df (pd.DataFrame): The input DataFrame.
+        diagnostics_config (dict): Dictionary containing diagnostic information.
+
+    Returns:
+        pd.DataFrame: DataFrame without the configured redundant columns.
+    """
+    out = df.copy()
+
+    columns_to_drop = diagnostics_config.get(
+        "columns_to_drop", []
     )
 
-    return X_train, X_test, y_train, y_test, extras_test
+    existing_columns = [
+        col for col in columns_to_drop
+        if col in out.columns
+    ]
+
+    out = out.drop(columns=existing_columns)
+
+    return out
+
+
+def clean_dataset(
+    df: pd.DataFrame,
+    diagnostics_config: dict
+) -> pd.DataFrame:
+    """
+    Apply all configured cleaning operations to the dataset.
+
+    Args:
+        df (pd.DataFrame): The raw input DataFrame.
+        diagnostics_config (dict): Configuration for the cleaning operations.
+
+    Returns:
+        pd.DataFrame: The cleaned DataFrame with missing values preserved
+        for later imputation.
+    """
+    out = missing_value_diagnostics(df, diagnostics_config)
+    out = valid_numerical_ranges(out, diagnostics_config)
+    out = canonicalize_categories(out, diagnostics_config)
+    out = remove_duplicates(out, diagnostics_config)
+    out = drop_redundant_columns(out, diagnostics_config)
+
+    return out
