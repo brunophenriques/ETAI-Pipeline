@@ -21,6 +21,14 @@ Our current best model is the simple Linear Regression with max_iter 1000, since
 
 ___
 
+### Week 3 — EDA findings
+
+The exploratory data analysis identified several data-quality issues beyond missing values: 6 clear inconsistencies between `age` and `age_cat`, 10 inconsistencies between `decile_score` and `score_text`, and 4 negative values in `juvenile_total`. It also revealed an ambiguity in the age-category boundary: 110 rows with age 45 are labelled `Greater than 45`, despite the category label `25 - 45`.
+
+These findings are documented in `notebooks/week3/01_eda_introduction.ipynb`. Because of the deadline and the time needed to become familiar with the new diagnostic techniques, I was not able to finish implementing the corresponding reusable functions or integrate the new checks into the pipeline. The next step is to create the diagnostic functions and update preprocessing/configuration so these issues are handled automatically.
+
+___
+
 ## `END OF THIS WEEK CHALLENGES HAVE A NICE WEEKEND`
 
 
