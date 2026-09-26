@@ -4,7 +4,8 @@
 
 ### WEEKLY CHALLENGES
 
-*Week 2*:
+**Week 2**:
+
 DT:   Train accuracy: 0.829
       Test accuracy:  0.627
       (Slight overfit, without any parameters, wouldn't be a good model to use)
@@ -21,125 +22,35 @@ Our current best model is the simple Linear Regression with max_iter 1000, since
 
 ___
 
-### Week 3 — EDA findings
-
-The exploratory data analysis identified several data-quality issues beyond missing values: 6 clear inconsistencies between `age` and `age_cat`, 10 inconsistencies between `decile_score` and `score_text`, and 4 negative values in `juvenile_total`. It also revealed an ambiguity in the age-category boundary: 110 rows with age 45 are labelled `Greater than 45`, despite the category label `25 - 45`.
-
-These findings are documented in `notebooks/week3/01_eda_introduction.ipynb`. Because of the deadline and the time needed to become familiar with the new diagnostic techniques, I was not able to finish implementing the corresponding reusable functions or integrate the new checks into the pipeline. The next step is to create the diagnostic functions and update preprocessing/configuration so these issues are handled automatically.
+## `END OF THIS WEEK CHALLENGES HAVE A NICE WEEKEND`
 
 ___
 
-## `END OF THIS WEEK CHALLENGES HAVE A NICE WEEKEND`
+**Week 3**:
 
+This week, I followed the diagnostics and requirements presented in the professor’s GitHub repository, particularly the weekly progress table. I chose not to pull and copy the completed implementation directly. Instead, I tried to understand the expected steps and create the functions myself before integrating them into the main pipeline through main.py. Because I implemented the work independently and avoided looking too closely at the completed code, some details may differ from the professor’s version or may have escaped my attention.
 
-This is the **starting point** for your semester project: a small but *complete* predictive pipeline -- every piece a real project needs (entry point, config, data loading, preprocessing, model, evaluation), just kept as simple as possible for now.
+The dataset was cleaned before training the models. Invalid values and missing-value placeholders were converted into missing values, inconsistent categories were standardized, duplicate observations and redundant variables were removed, and missing values were imputed. Missingness indicators were also created for the variables identified as MNAR.
 
-The task: predict two-year recidivism using ProPublica's COMPAS
-dataset -- the data behind a real 2016 investigation into a risk-
-assessment algorithm actually used by US courts to help inform bail and sentencing decisions. See `data/README.md` for the full problem description and a complete data dictionary before you start.
+### *Decision Tree with max_depth: 5, min_samples_split: 10 and min_samples_leaf: 5:*
 
-It has some **deliberately weak spots**. Part of your work this
-semester is finding them and making them better -- see the pipeline progress table below, which tracks what changes and why as the weeks
-go on.
+Train accuracy: 0.684 | Test accuracy: 0.665 | Train–test gap: 0.020 | Class 1 recall: 0.51 |Class 1 F1-score: 0.58
 
-## Project structure
+The restricted Decision Tree generalizes much better than the original unrestricted tree from Week 2. The original tree had a train accuracy of 0.829 and a test accuracy of only 0.627, showing clear overfitting. After preprocessing and restricting its complexity, its test accuracy increased to 0.665 and its train–test gap decreased from 0.202 to only 0.020.
 
-```
-.
-├── main.py                # entry point: run the whole pipeline
-├── config.yaml             # all tunable settings live here
-├── requirements.txt
-├── src/
-│   ├── data.py             # loading
-│   ├── preprocessing.py    # cleaning + train/test split
-│   ├── model.py             # model construction
-│   ├── evaluate.py         # accuracy metrics + fairness check
-│   └── results.py          # saves each run's report to disk
-├── results/                # created automatically -- one file per run (not tracked in git)
-└── data/
-    ├── compas_two_year_recidivism.csv
-    └── README.md            # problem description + full data dictionary
-```
+### *Logistic Regression with max_iter: 1000 and solver: lbfgs:*
 
-## Pipeline progress
+Train accuracy: 0.673 | Test accuracy: 0.665 | Train–test gap: 0.008 | Class 1 recall: 0.53 | Class 1 F1-score: 0.59
 
-This table is updated after each practical class, so you can always see what changed in the pipeline and why -- it's a running log, not a fixed syllabus.
+The new Logistic Regression has a slightly lower test accuracy than the Week 2 version, decreasing from 0.679 to 0.665. However, the new result is based on a cleaner and more reliable dataset. The old pipeline removed every incomplete row using dropna(), while the new pipeline preserves more observations through imputation and evaluates 1,443 test cases instead of 1,252. Therefore, the two accuracy values are not directly comparable, and the new result provides a more trustworthy estimate of performance on unseen data.
 
-| Week | Practical class focus | Added to the pipeline |
-|------|------------------------|------------------------|
-| 2 | Introduction & baseline pipeline | Initial version: project structure, a single naive train/test split (no cross-validation), minimal preprocessing (drop rows with missing values, one-hot encode categoricals), logistic regression baseline, a first (deliberately simple) fairness check comparing our model's and COMPAS's own false-positive rate by race, train-vs-test accuracy reporting (to start spotting overfitting), and each run's full report saved automatically to `results/` |
+### *Current best model*
 
-## Environment setup
+Considering all models tested so far, **Logistic Regression remains the best overall model**. The new Logistic Regression and restricted Decision Tree have the same test accuracy of 0.665, but Logistic Regression has a smaller train–test gap (0.008 compared with 0.020), slightly higher recall for class 1 (0.53 compared with 0.51), and a slightly higher class 1 F1-score (0.59 compared with 0.58).
 
-You only need to do this once per machine.
+The Week 2 Logistic Regression obtained the highest numerical test accuracy at 0.679, but it was evaluated using the older preprocessing approach and a smaller test set produced after dropping incomplete observations. For this reason, the new Logistic Regression is considered the strongest and most reliable model to date: it maintains stable performance while using cleaner variables, more observations, and a safer preprocessing process.
 
-### macOS / Linux
-```bash
-python3 -m venv venv                 # creates an isolated Python environment in a folder called "venv"
-source venv/bin/activate             # activates it -- packages install here, not system-wide, and stay out of your other projects
-pip install -r requirements.txt      # installs the exact packages this project needs, into that environment
-```
+#### have a nice weekend!
 
-### Windows -- PowerShell
-```powershell
-python -m venv venv                  # creates an isolated Python environment in a folder called "venv"
-venv\Scripts\activate                # activates it -- packages install here, not system-wide, and stay out of your other projects
-pip install -r requirements.txt      # installs the exact packages this project needs, into that environment
-```
-If PowerShell blocks the activation script, run this once first:
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-```
+__________
 
-### Windows -- cmd.exe
-Same three steps as above, just with cmd's own activation command:
-```cmd
-python -m venv venv
-venv\Scripts\activate.bat
-pip install -r requirements.txt
-```
-
-Once the environment is active you'll see `(venv)` at the start of your prompt. To leave it later, run `deactivate` (same command on every OS).
-
-### Every time after the first
-
-Creating the environment and installing packages only needs to happen once, ever. Every other time you sit down to work -- a new terminal window, the next practical class, tomorrow -- you don't repeat any of the steps above. From the project's root folder, you just need to:
-
-**macOS / Linux**
-```bash
-source venv/bin/activate
-python main.py
-```
-
-**Windows**
-```powershell
-venv\Scripts\activate
-python main.py
-```
-
-That's it -- activate, then run. If you don't see `(venv)` at the start of your prompt, the environment isn't active and `python main.py` may use the wrong Python (or fail to find a package) entirely.
-
-## Running the pipeline
-
-With the environment active (see above), from the project's root
-folder, on any OS:
-```bash
-python main.py
-```
-
-This loads `config.yaml`, loads and preprocesses the data, trains the model, and prints:
-- **train accuracy and test accuracy, side by side.** Comparing the two is how you catch overfitting: if the model looks much better on the data it was trained on than on data it's never seen, it has memorised rather than learned something that generalises. 
-- a classification report on the test set
-- a false-positive-rate-by-race comparison between our model and
-  COMPAS's own score
-
-All of this is also saved to a timestamped file in `results/` (e.g.`results/run_20260916_143012.txt`), so it doesn't just scroll past in your terminal -- open it later, or change something in `config.yaml` (like the model type) and compare the new file to the last one.
-`results/` is created automatically the first time you run the
-pipeline, and isn't tracked in git (see `.gitignore`) since it's
-generated output, not source.
-
-You're free to improve on this structure or restructure it entirely -- what matters is that your project stays runnable end-to-end with a single command, and that each piece (data, preprocessing, model, evaluation) stays easy to find and change independently.
-
-## Dataset
-
-See `data/README.md`.
