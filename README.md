@@ -54,3 +54,11 @@ The Week 2 Logistic Regression obtained the highest numerical test accuracy at 0
 
 __________
 
+### Additional EDA findings and remaining work
+
+During the exploratory data analysis, I found 6 records where the value in `age` did not match the corresponding `age_cat` category: defendants aged between 51 and 66 were labelled `Less than 25`. I also found 10 records where the COMPAS risk score did not agree with its textual category. For example, some records with a low `decile_score` of 1 or 2 were labelled `High`, while some records with a high score of 9 or 10 were labelled `Low`. In addition, 4 records had a negative `juvenile_total`. Since this column represents the total number of juvenile offences, it should never be negative; these cases were linked to an invalid negative value in `juv_fel_count`.
+
+Finally, I found an ambiguity in the age categories. There are 110 records for people aged 45 labelled `Greater than 45`, while another category is named `25 - 45`. Therefore, it is unclear from the category names whether age 45 should belong to the middle category or the upper category, and this should be clarified before applying an automatic correction.
+
+These findings were documented in `notebooks/week3/01_eda_introduction.ipynb`. Due to family issues and the deadline, I was not able to finish creating the new reusable diagnostic functions or fully update the pipeline with the additional validation checks. A future improvement would be to implement these functions and update the preprocessing/configuration so that the identified issues are handled automatically.
+
