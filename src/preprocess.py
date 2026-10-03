@@ -5,18 +5,17 @@ The preprocessing process:
     - creates missingness indicators for MNAR columns;
     - separates features, target, and fairness columns;
     - creates stratified training and test sets;
-    - imputes missing values using training data;
-    - one-hot encodes categorical features.
+    - builds an unfitted imputation, scaling, and encoding recipe.
 """
 
 import numpy as np
 import pandas as pd
 
 from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
+from sklearn.impute import KNNImputer, SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, RobustScaler, StandardScaler
 
 from src.cleaning import clean_dataset
 
@@ -118,7 +117,9 @@ def build_feature_preprocessor(
     """
     Build the transformer used to impute and encode model features.
 
-    Numerical columns are imputed with the configured numerical strategy.
+    Numerical columns are scaled before imputation using training-fold
+    statistics. Scalers preserve NaN, allowing KNN distances to use comparable
+    units. Scaling options are none, standard, and robust.
     Categorical columns are imputed with the configured categorical
     strategy and then one-hot encoded.
 
@@ -138,16 +139,31 @@ def build_feature_preprocessor(
         if col not in numerical_columns
     ]
 
-    numerical_pipeline = Pipeline([
-        (
-            "imputer",
-            SimpleImputer(
-                strategy=preprocessing_config.get(
-                    "numerical_imputation",
-                    "median"
-                )
-            )
+    scaler_name = preprocessing_config.get("scaler", "none")
+    scaler_factories = {
+        "none": lambda: "passthrough",
+        "standard": StandardScaler,
+        "robust": RobustScaler,
+    }
+    if scaler_name not in scaler_factories:
+        raise ValueError(
+            f"Unknown scaler: {scaler_name}. Options: {list(scaler_factories)}"
         )
+
+    strategy = preprocessing_config.get("numerical_imputation", "median")
+    if strategy == "knn":
+        if scaler_name == "none":
+            raise ValueError("KNN imputation requires scaler: standard or robust.")
+        neighbors = preprocessing_config.get("n_neighbors", 5)
+        if isinstance(neighbors, bool) or not isinstance(neighbors, int) or neighbors < 1:
+            raise ValueError("n_neighbors must be a positive integer.")
+        imputer = KNNImputer(n_neighbors=neighbors, keep_empty_features=True)
+    else:
+        imputer = SimpleImputer(strategy=strategy, keep_empty_features=True)
+
+    numerical_pipeline = Pipeline([
+        ("scaler", scaler_factories[scaler_name]()),
+        ("imputer", imputer),
     ])
 
     categorical_pipeline = Pipeline([
@@ -195,11 +211,11 @@ def preprocess(
     random_state: int
 ):
     """
-    Apply the complete cleaning and preprocessing process.
+    Prepare the data splits and an unfitted feature preprocessor.
 
     The function cleans the dataset, creates MNAR indicators, separates
-    features and target, splits the data, imputes missing values, and
-    encodes categorical features.
+    features and target, and splits the data. Feature imputation and encoding
+    are fitted later inside the model pipeline, using training rows only.
 
     Args:
         df (pd.DataFrame): The raw input DataFrame.
@@ -212,8 +228,9 @@ def preprocess(
         random_state (int): Random seed used for reproducibility.
 
     Returns:
-        tuple: Training features, test features, training targets,
-        test targets, and test fairness columns.
+        tuple: Untransformed training features, test features, training targets,
+        test targets, development fairness columns, test fairness columns,
+        and the unfitted feature preprocessor.
     """
     out = clean_dataset(df, diagnostics_config)
 
@@ -261,6 +278,9 @@ def preprocess(
     X_train = prepare_categorical_missing_values(X_train)
     X_test = prepare_categorical_missing_values(X_test)
 
+    # Preserve recorded groups for OOF auditing, including unknown race values.
+    extras_dev = extras_train.copy()
+
     extra_columns = preprocessing_config.get(
         "extra_columns_to_impute", []
     )
@@ -275,7 +295,12 @@ def preprocess(
         preprocessing_config
     )
 
-    X_train = feature_preprocessor.fit_transform(X_train)
-    X_test = feature_preprocessor.transform(X_test)
-
-    return X_train, X_test, y_train, y_test, extras_test
+    return (
+        X_train,
+        X_test,
+        y_train,
+        y_test,
+        extras_dev,
+        extras_test,
+        feature_preprocessor,
+    )

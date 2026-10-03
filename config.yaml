@@ -99,8 +99,13 @@ diagnostics:
 
 
 preprocessing:
-  # Median for age, juv_fel_count, and priors_count
+  # Scale before imputation: none, standard, or robust.
+  # KNN requires standard or robust so distances use comparable units.
+  scaler: "standard"
+
+  # Numeric strategies: median, mean, most_frequent, constant, or knn.
   numerical_imputation: "median"
+  n_neighbors: 5  # Used only by knn; uniform-weight neighbor averaging.
 
   # Mode for sex and c_charge_degree
   categorical_imputation: "most_frequent"
@@ -115,11 +120,26 @@ preprocessing:
     - "race"
 
 
+# Reserved final test set: keep these settings fixed during model comparisons.
 split:
   test_size: 0.2
   random_state: 42
 
 
+cv:
+  n_splits: 5
+  shuffle: true
+  random_state: 42
+
+
+imputation_comparison:
+  # Fixed in advance; all holdouts come from development data only.
+  holdout_seeds: [0, 42, 123]
+  validation_size: 0.25
+
+
+# Supported types: dummy, logistic_regression, decision_tree, random_forest.
+# Replace the entire model block (including params) when switching models.
 model:
   type: "decision_tree"
   params:
@@ -127,6 +147,26 @@ model:
     min_samples_split: 10
     min_samples_leaf: 5
     random_state: 42
+
+
+# Alternative model blocks:
+# model:
+#   type: "dummy"
+#   params:
+#     strategy: "most_frequent"
+#
+# model:
+#   type: "logistic_regression"
+#   params:
+#     max_iter: 1000
+#     solver: "lbfgs"
+#
+# model:
+#   type: "random_forest"
+#   params:
+#     n_estimators: 300
+#     random_state: 42
+#     n_jobs: -1
 
 
 output:

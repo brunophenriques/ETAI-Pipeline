@@ -62,3 +62,58 @@ Finally, I found an ambiguity in the age categories. There are 110 records for p
 
 These findings were documented in `notebooks/week3/01_eda_introduction.ipynb`. Due to family issues and the deadline, I was not able to finish creating the new reusable diagnostic functions or fully update the pipeline with the additional validation checks. A future improvement would be to implement these functions and update the preprocessing/configuration so that the identified issues are handled automatically.
 
+## Pipeline progress
+
+| Week | Changes |
+|---|---|
+| 2 | Tested Logistic Regression and Decision Trees with a single train/test split. |
+| 3 | Cleaned the dataset, added imputation and missingness indicators, and compared the new results with Week 2. |
+| 4 | Added cross-validation, kept the test set aside, added Dummy and Random Forest, and compared median with KNN imputation. |
+
+__________
+
+**Week 4**:
+
+This week, I added cross-validation to the pipeline so the results would not depend only on one train/test split. The preprocessing and the model are now together in the same Pipeline, meaning that each fold learns its own imputation values, encoding and scaling from its training data. This avoids using information from the validation rows when preparing the data.
+
+The 5,771 development cases are used for the comparisons, while the 1,443 test cases are kept aside. This test set was already evaluated in previous weeks, but it was not used for this week's comparison. The classification report and fairness comparison now use out-of-fold predictions, so each person is evaluated by a model that did not train on their record.
+
+### *Median vs KNN imputation:*
+
+For this challenge, I compared the usual median imputation with KNN using 5 neighbors. Instead of filling every missing value with the column median, KNN uses similar records to calculate the replacement. Since it measures distances, I used StandardScaler before imputation for both versions, so a variable with larger values would not dominate just because of its scale.
+
+I kept the same Decision Tree parameters: max_depth: 5, min_samples_split: 10, min_samples_leaf: 5 and random_state: 42. Both versions also kept the same encoding and missingness indicators. The comparison used the same 5 stratified folds with random_state: 42, and three single splits with seeds 0, 42 and 123.
+
+| Imputation | Holdout seed 0 | Holdout seed 42 | Holdout seed 123 | CV accuracy (mean ± std) | CV train–val gap |
+|---|---|---|---|---|---|
+| Median | 0.655 | 0.678 | 0.676 | 0.678 ± 0.015 | +0.008 |
+| KNN (5 neighbors) | 0.663 | 0.677 | 0.676 | 0.671 ± 0.011 | +0.013 |
+
+These holdout results come from 75/25 splits of the development data, so they are different from the Week 3 test results.
+
+### *Did the single split and CV agree?*
+
+The answer depends on which single split we look at: KNN performed better with seeds 0 and 123, while median performed better with seed 42 (seed 123 looks equal in the table because of rounding). With cross-validation, median obtained the higher average accuracy, 0.678 compared with 0.671, and also had a smaller train–validation gap. The corrected paired comparison gave p = 0.1628 and a 95% interval of [-0.01865, +0.00444] for KNN minus median, so the difference is not clear enough to say one is definitely better. For this reason, **median stays in config.yaml**, since it is simpler and KNN did not show a clear improvement in this comparison. This conclusion is for the Decision Tree and 5 neighbors tested here; it does not mean KNN would always perform worse with other settings or models.
+
+The paired comparison corrects for the fact that the CV folds share training data. It follows the [scikit-learn example](https://scikit-learn.org/stable/auto_examples/model_selection/plot_grid_search_stats.html), using `SE = sqrt((1/5 + n_validation/n_train) * variance_of_paired_differences)`; the corrected SE was 0.00416. There are only five paired results, so not finding a clear difference does not prove the methods are equivalent.
+
+### *Running the comparison:*
+
+The comparison can be repeated with:
+
+```bash
+python compare_imputation.py
+```
+
+The full results are saved in `results/imputation_comparison/`, including the scores for each fold and holdout, the settings used, and the paired comparison. This folder is ignored by Git, so the script generates the files locally and the main results are kept in the table above.
+
+To try KNN in the normal pipeline, change `numerical_imputation` to `"knn"` in config.yaml, keep `scaler` as `"standard"` or `"robust"`, and choose `n_neighbors`. Then run `python main.py`. The current configuration uses median with standard scaling.
+
+### *Current best model*
+
+Considering the four models tested with the same preprocessing and the same 5 CV folds, **the restricted Decision Tree is now my current best model by average accuracy**. With max_depth: 5, min_samples_split: 10 and min_samples_leaf: 5, it obtained a CV accuracy of 0.678 ± 0.015, compared with 0.670 ± 0.017 for Logistic Regression, 0.631 ± 0.011 for Random Forest and 0.549 ± 0.000 for Dummy. Its average train–validation gap was only 0.008, while Random Forest had a much larger gap of 0.171, showing clear overfitting.
+
+In Week 3, I preferred Logistic Regression because of its smaller gap and slightly better recall and F1 on the single test split. With cross-validation, the Decision Tree has the higher average accuracy, although Logistic Regression still has a smaller gap of 0.002 and their accuracy results are close. For now, the Decision Tree with median imputation and standard scaling stays in config.yaml, since it gave the best average accuracy in this comparison. This is my current choice for the settings tested, rather than proof that it will always beat Logistic Regression; the final test set was not evaluated again to make this decision.
+
+#### have a nice weekend!
+

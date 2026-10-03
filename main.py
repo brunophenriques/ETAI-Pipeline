@@ -6,15 +6,20 @@ Run with:
 
 Pipeline:
     load config -> load raw data -> clean and preprocess
-    -> split -> train -> evaluate -> save results
+    -> reserve test set -> cross-validate development set -> refit -> save results
 """
 
 import yaml
+from sklearn.pipeline import Pipeline
 
 from src.data import load_data
 from src.preprocess import preprocess
 from src.model import build_model
-from src.evaluate import evaluate, fairness_report
+from src.evaluate import (
+    cross_validate_pipeline,
+    fairness_report,
+    oof_classification_report,
+)
 from src.results import save_run
 
 
@@ -32,7 +37,15 @@ def main():
     df_raw = load_data(config["data"]["path"])
 
     # preprocess() calls clean_dataset() internally
-    X_train, X_test, y_train, y_test, extras_test = preprocess(
+    (
+        X_dev,
+        X_test,
+        y_dev,
+        y_test,
+        extras_dev,
+        extras_test,
+        feature_preprocessor,
+    ) = preprocess(
         df=df_raw,
         target=config["data"]["target"],
         sensitive_attr=config["data"]["sensitive_attr"],
@@ -43,29 +56,35 @@ def main():
         random_state=config["split"]["random_state"],
     )
 
-    # Build and train the model
-    model = build_model(config["model"])
-    model.fit(X_train, y_train)
-
-    # Generate predictions for both datasets
-    y_train_pred = model.predict(X_train)
-    y_test_pred = model.predict(X_test)
-
-    # Evaluate predictive performance
-    report = evaluate(
-        y_train,
-        y_train_pred,
-        y_test,
-        y_test_pred,
+    # Build one estimator so each CV fold fits its own preprocessing.
+    model = Pipeline([
+        ("preprocessing", feature_preprocessor),
+        ("classifier", build_model(config["model"])),
+    ])
+    # Compare recipes on development data; leave the final test set unused.
+    report, y_oof = cross_validate_pipeline(
+        model,
+        X_dev,
+        y_dev,
+        config["cv"],
     )
-
-    # Evaluate fairness using the sensitive attribute
-    report += "\n" + fairness_report(
-        y_test,
-        y_test_pred,
-        extras_test,
+    report += "\n\n" + oof_classification_report(y_dev, y_oof)
+    report += "\n\n" + fairness_report(
+        y_dev,
+        y_oof,
+        extras_dev,
         sensitive_attr=config["data"]["sensitive_attr"],
+        context="development set, out-of-fold predictions",
     )
+
+    # CV evaluates fresh copies; refit this pipeline on all development rows.
+    model.fit(X_dev, y_dev)
+    summary = (
+        f"Final pipeline refit on {len(X_dev)} development rows.\n"
+        f"Reserved test set: {len(X_test)} rows (not evaluated)."
+    )
+    print(summary)
+    report += "\n\n" + summary
 
     # Save the configuration and evaluation report
     results_dir = config.get("output", {}).get(
