@@ -38,7 +38,7 @@ def corrected_paired_comparison(differences, validation_train_ratio: float) -> d
 def cross_validate_pipeline(pipeline, X, y, cv_config: dict) -> tuple[str, np.ndarray]:
     """Refit the complete pipeline inside each development-set fold.
 
-    Return a printable report with per-fold accuracy, sample standard
+    Return a printable report with per-fold scores, sample standard
     deviations, and the training-validation gap, plus one out-of-fold
     prediction per development row in its original positional order.
     Predictions reuse the fold estimators; no test rows are used.
@@ -49,12 +49,14 @@ def cross_validate_pipeline(pipeline, X, y, cv_config: dict) -> tuple[str, np.nd
         shuffle=shuffle,
         random_state=cv_config.get("random_state") if shuffle else None,
     )
+    scoring = cv_config.get("scoring", "accuracy")
     scores = cross_validate(
         pipeline,
         X,
         y,
         cv=cv,
-        scoring="accuracy",
+        scoring=scoring,
+        n_jobs=cv_config.get("n_jobs", 1),
         return_train_score=True,
         return_estimator=True,
         return_indices=True,
@@ -73,7 +75,7 @@ def cross_validate_pipeline(pipeline, X, y, cv_config: dict) -> tuple[str, np.nd
     folds["gap"] = folds["train"] - folds["validation"]
 
     lines = [
-        f"Cross-validation ({len(folds)} stratified folds, metric: accuracy)",
+        f"Cross-validation ({len(folds)} stratified folds, metric: {scoring})",
         "",
         folds.to_string(index=False, float_format=lambda value: f"{value:.3f}"),
         "",
@@ -85,7 +87,7 @@ def cross_validate_pipeline(pipeline, X, y, cv_config: dict) -> tuple[str, np.nd
         )
     lines.extend([
         "",
-        f"CV accuracy (mean +/- std): {folds['validation'].mean():.3f} "
+        f"CV {scoring} (mean +/- std): {folds['validation'].mean():.3f} "
         f"+/- {folds['validation'].std(ddof=1):.3f}",
         f"Mean train-validation gap: {folds['gap'].mean():+.3f}",
     ])
@@ -94,10 +96,37 @@ def cross_validate_pipeline(pipeline, X, y, cv_config: dict) -> tuple[str, np.nd
     return report, y_oof
 
 
-def oof_classification_report(y_true, y_pred) -> str:
+def format_nested_cv_report(folds: pd.DataFrame, scoring: str) -> str:
+    """Summarize outer evaluation scores and each fold's tuning choices."""
+    lines = [
+        f"Nested cross-validation ({len(folds)} stratified outer folds, metric: {scoring})",
+        "Inner best scores selected parameters; outer validation scores evaluate tuning.",
+        "",
+        folds.to_string(index=False, float_format=lambda value: f"{value:.3f}"),
+        "",
+    ]
+    for column in ["train", "validation", "gap"]:
+        lines.append(
+            f"{column.capitalize():<11s} mean = {folds[column].mean():.3f}   "
+            f"std = {folds[column].std(ddof=1):.3f}"
+        )
+    lines.extend([
+        "",
+        f"Nested CV {scoring} (mean +/- std): {folds['validation'].mean():.3f} "
+        f"+/- {folds['validation'].std(ddof=1):.3f}",
+        f"Mean train-validation gap: {folds['gap'].mean():+.3f}",
+    ])
+    report = "\n".join(lines)
+    print(report)
+    return report
+
+
+def oof_classification_report(
+    y_true, y_pred, context: str = "development set, out-of-fold predictions"
+) -> str:
     """Report classification metrics on unseen-fold development predictions."""
     report = (
-        "Classification report (development set, out-of-fold predictions):\n"
+        f"Classification report ({context}):\n"
         + classification_report(y_true, y_pred, zero_division=0)
     )
     print(report)

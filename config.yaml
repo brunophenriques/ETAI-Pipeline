@@ -130,6 +130,59 @@ cv:
   n_splits: 5
   shuffle: true
   random_state: 42
+  scoring: "accuracy"
+  n_jobs: -1
+
+
+tuning:
+  enabled: true
+  n_trials: 15
+  n_splits: 5       # Inner CV: evaluates each trial
+  random_state: 42  # Seeds inner CV and Optuna's TPE sampler
+
+  search_spaces:
+    random_forest:
+      classifier__n_estimators:
+        type: int
+        low: 100
+        high: 500
+
+      classifier__max_depth:
+        type: categorical
+        choices: [null, 3, 5, 8, 12, 20]
+
+      classifier__min_samples_leaf:
+        type: int
+        low: 1
+        high: 100
+        log: true
+
+      classifier__max_features:
+        type: categorical
+        choices: ["sqrt", "log2", null]
+
+    logistic_regression:
+      classifier__C:
+        type: float
+        low: 0.0001
+        high: 100
+        log: true
+
+    decision_tree:
+      classifier__max_depth:
+        type: int
+        low: 1
+        high: 20
+
+      classifier__min_samples_leaf:
+        type: int
+        low: 1
+        high: 200
+        log: true
+
+      classifier__criterion:
+        type: categorical
+        choices: ["gini", "entropy"]
 
 
 imputation_comparison:
@@ -141,12 +194,11 @@ imputation_comparison:
 # Supported types: dummy, logistic_regression, decision_tree, random_forest.
 # Replace the entire model block (including params) when switching models.
 model:
-  type: "decision_tree"
+  type: "random_forest"
   params:
-    max_depth: 5
-    min_samples_split: 10
-    min_samples_leaf: 5
+    n_estimators: 300
     random_state: 42
+    n_jobs: 1  # CV parallelizes folds; each forest uses one worker.
 
 
 # Alternative model blocks:
@@ -156,17 +208,18 @@ model:
 #     strategy: "most_frequent"
 #
 # model:
+#   type: "decision_tree"
+#   params:
+#     max_depth: 5
+#     min_samples_split: 10
+#     min_samples_leaf: 5
+#     random_state: 42
+#
+# model:
 #   type: "logistic_regression"
 #   params:
 #     max_iter: 1000
 #     solver: "lbfgs"
-#
-# model:
-#   type: "random_forest"
-#   params:
-#     n_estimators: 300
-#     random_state: 42
-#     n_jobs: -1
 
 
 output:
