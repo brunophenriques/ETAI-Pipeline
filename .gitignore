@@ -4,4 +4,8 @@ __pycache__/
 .DS_Store
 .ipynb_checkpoints/
 *.egg-info/
-results/
+results/*
+# Keep the evidence referenced by the Week 6 submission.
+!results/week6_comparison/
+!results/feature_engineering/
+!results/adaboost_logistic_regression/

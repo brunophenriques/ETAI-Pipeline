@@ -1,0 +1,58 @@
+Model: oblique_random_forest
+Starting model parameters: {'random_state': 42, 'n_jobs': 1}
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'scoring': 'accuracy', 'n_jobs': -1}
+Tuning enabled: False; trials per study: 0
+Full configuration: oblique_random_forest_default_cv_seed42.json
+Elapsed seconds: 3.46
+
+Cross-validation (5 stratified folds, metric: accuracy)
+
+ fold  train  validation   gap
+    1  0.801       0.635 0.166
+    2  0.806       0.620 0.186
+    3  0.798       0.639 0.159
+    4  0.801       0.651 0.150
+    5  0.801       0.641 0.160
+
+Train       mean = 0.801   std = 0.003
+Validation  mean = 0.637   std = 0.011
+Gap         mean = 0.164   std = 0.013
+
+CV accuracy (mean +/- std): 0.637 +/- 0.011
+Mean train-validation gap: +0.164
+
+Classification report (development set, out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.66      0.72      0.68      3170
+           1       0.61      0.54      0.57      2601
+
+    accuracy                           0.64      5771
+   macro avg       0.63      0.63      0.63      5771
+weighted avg       0.63      0.64      0.63      5771
+
+
+False positive rate by race (development set, out-of-fold predictions)
+(share of people who did NOT reoffend, but were predicted to)
+
+  Our model:
+    African-American     FPR = 0.33  (n=1420)
+    Asian                FPR = 0.29  (n=21)
+    Caucasian            FPR = 0.24  (n=1161)
+    Hispanic             FPR = 0.27  (n=311)
+    Native American      FPR = 0.00  (n=6)
+    Other                FPR = 0.23  (n=185)
+    Unknown              FPR = 0.30  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+
+Final pipeline refit on 5771 development rows.
+Reserved test set: 1443 rows (not evaluated).

@@ -1,0 +1,35 @@
+{
+  "dataset": "data\\compas_two_year_recidivism.csv",
+  "dataset_sha256": "6a747fd4a04d545976510401695587984a06662ea319b614fbf079b61201161a",
+  "sklearn_version": "1.9.1",
+  "optuna_version": "5.0.0",
+  "split": {
+    "test_size": 0.2,
+    "random_state": 42
+  },
+  "cv": {
+    "n_splits": 5,
+    "shuffle": true,
+    "random_state": 42,
+    "scoring": "accuracy",
+    "n_jobs": -1
+  },
+  "preprocessing": {
+    "scaler": "standard",
+    "numerical_imputation": "median",
+    "n_neighbors": 5,
+    "categorical_imputation": "most_frequent",
+    "missing_indicator_columns": [
+      "priors_count",
+      "c_charge_degree"
+    ],
+    "extra_columns_to_impute": [
+      "race"
+    ]
+  },
+  "tuning_trials_per_study": 50,
+  "tuning_inner_folds": 5,
+  "sampler_seed": 42,
+  "reserved_test_evaluated": false,
+  "note": "AdaBoost and oblique tuned reports reused from prior 50-trial runs; see existing_run_sources.json. Other reports produced through main.main() with in-memory configuration overrides."
+}

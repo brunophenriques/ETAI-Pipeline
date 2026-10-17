@@ -1,0 +1,68 @@
+Run: 20261017_224928
+Model: adaboost_logistic_regression  params={'C': 1.0, 'max_iter': 2000, 'n_estimators': 50, 'learning_rate': 1.0, 'random_state': 42}
+Reserved test size: 0.2  random_state: 42
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'scoring': 'accuracy', 'n_jobs': -1}
+Preprocessing settings: {'engineered_features': {'enabled': True}, 'scaler': 'standard', 'numerical_imputation': 'median', 'n_neighbors': 5, 'categorical_imputation': 'most_frequent', 'missing_indicator_columns': ['priors_count', 'c_charge_degree'], 'extra_columns_to_impute': ['race']}
+============================================================
+
+Nested cross-validation (5 stratified outer folds, metric: accuracy)
+Inner best scores selected parameters; outer validation scores evaluate tuning.
+
+ fold  train  validation    gap  inner_best  classifier__estimator__C  classifier__n_estimators  classifier__learning_rate
+    1  0.672       0.684 -0.012       0.678                     0.057                       297                      0.531
+    2  0.684       0.657  0.027       0.684                     9.212                        46                      0.032
+    3  0.679       0.678  0.001       0.678                     3.770                        67                      0.422
+    4  0.671       0.687 -0.017       0.677                     0.003                       174                      0.700
+    5  0.680       0.674  0.005       0.676                    11.078                        31                      0.021
+
+Train       mean = 0.677   std = 0.006
+Validation  mean = 0.676   std = 0.012
+Gap         mean = 0.001   std = 0.017
+
+Nested CV accuracy (mean +/- std): 0.676 +/- 0.012
+Mean train-validation gap: +0.001
+Tuning settings: {'enabled': True, 'n_trials': 50, 'n_splits': 5, 'random_state': 42, 'search_spaces': {'adaboost_logistic_regression': {'classifier__estimator__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'adaboost': {'classifier__estimator__max_depth': {'type': 'int', 'low': 1, 'high': 8}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'oblique_random_forest': {'classifier__estimator__tree__max_depth': {'type': 'int', 'low': 2, 'high': 30}, 'classifier__estimator__tree__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__estimator__project__n_components': {'type': 'int', 'low': 3, 'high': 10}}, 'random_forest': {'classifier__n_estimators': {'type': 'int', 'low': 100, 'high': 500}, 'classifier__max_depth': {'type': 'categorical', 'choices': [None, 3, 5, 8, 12, 20]}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 100, 'log': True}, 'classifier__max_features': {'type': 'categorical', 'choices': ['sqrt', 'log2', None]}}, 'logistic_regression': {'classifier__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}}, 'decision_tree': {'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 20}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__criterion': {'type': 'categorical', 'choices': ['gini', 'entropy']}}}}
+
+Classification report (development set, nested out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.67      0.81      0.73      3170
+           1       0.69      0.52      0.59      2601
+
+    accuracy                           0.68      5771
+   macro avg       0.68      0.66      0.66      5771
+weighted avg       0.68      0.68      0.67      5771
+
+
+False positive rate by race (development set, nested out-of-fold predictions)
+(share of people who did NOT reoffend, but were predicted to)
+
+  Our model:
+    African-American     FPR = 0.26  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.14  (n=1161)
+    Hispanic             FPR = 0.14  (n=311)
+    Native American      FPR = 0.00  (n=6)
+    Other                FPR = 0.13  (n=185)
+    Unknown              FPR = 0.20  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+
+Final search on all development rows (metric: accuracy).
+Selected parameters: {'classifier__estimator__C': 0.00010619841237145819, 'classifier__n_estimators': 46, 'classifier__learning_rate': 0.7763576998140794}
+Final classifier parameters: {'estimator__C': 0.00010619841237145819, 'estimator__class_weight': None, 'estimator__dual': False, 'estimator__fit_intercept': True, 'estimator__intercept_scaling': 1, 'estimator__l1_ratio': 0.0, 'estimator__max_iter': 2000, 'estimator__n_jobs': None, 'estimator__penalty': 'deprecated', 'estimator__random_state': None, 'estimator__solver': 'lbfgs', 'estimator__tol': 0.0001, 'estimator__verbose': 0, 'estimator__warm_start': False, 'estimator': LogisticRegression(C=0.00010619841237145819, max_iter=2000), 'learning_rate': 0.7763576998140794, 'n_estimators': 46, 'random_state': 42}
+Best Optuna trial score: 0.680
+Nested CV mean score: 0.676
+Optimism check (best trial - nested mean): +0.005
+This difference is descriptive; outer training sets are smaller, so it is not a pure estimate of selection bias.
+
+Final pipeline refit on 5771 development rows.
+Reserved test set: 1443 rows (not evaluated).

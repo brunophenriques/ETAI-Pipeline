@@ -70,6 +70,7 @@ These findings were documented in `notebooks/week3/01_eda_introduction.ipynb`. D
 | 3 | Cleaned the dataset, added imputation and missingness indicators, and compared the new results with Week 2. |
 | 4 | Added cross-validation, kept the test set aside, added Dummy and Random Forest, and compared median with KNN imputation. |
 | 5 | Added Optuna tuning and nested cross-validation, then tuned Logistic Regression and Random Forest and compared them with the tuned Decision Tree. |
+| 6 | Added AdaBoost and a projection-based oblique forest, compared the model families with 50-trial nested tuning, tested three engineered features, and compared boosted LR with plain LR. The final test set stayed aside. |
 
 __________
 
@@ -173,5 +174,97 @@ The fairness comparison also uses nested OOF predictions. For African-American d
 The nested scores evaluate the tuning procedure, which can select different parameters in each outer fold. After that evaluation, I ran a separate search on all 5,771 development rows and refitted each final winner on those rows. The 1,443 reserved test cases were not evaluated this week, although this test set had already been used in earlier weeks.
 
 The reports are saved locally as results/optuna42.txt, results/optuna_lr42.txt and results/optuna_rf42.txt. The two main challenges are complete. The optional tasks of tuning preprocessing and repeating the experiments with balanced accuracy or F1 are still to do.
+
+#### have a nice weekend!
+
+__________
+
+**Week 6**:
+
+This week, I added AdaBoost and the notebook's projection-based oblique forest to my existing pipeline. The ensemble table below uses the original features and preprocessing, and compares the models on the same 5,771 development rows with 5 stratified outer folds, accuracy and seed 42. The 1,443 reserved test rows were not evaluated.
+
+## Model evaluation
+
+### Ensembles
+
+The default column uses ordinary CV without tuning. I used the constructor defaults for model complexity, with seed 42 for reproducibility, one worker per forest because CV runs folds in parallel, and max_iter: 1000 for LR to allow convergence. The oblique baseline uses our notebook constructor defaults, including 100 trees and 10 projection components; it is a projection per tree, rather than a projection per node.
+
+For the tuned column, every model used 50 trials per study, 5 inner folds and the same outer folds. I repeated LR, DT and RF with that budget and kept the existing 50-trial AdaBoost and oblique runs. The best-trial score and chosen parameters come from the separate final search on all development rows; the nested score evaluates the tuning procedure across the outer folds. I also included tuned LR because I had already implemented its C search in Week 5.
+
+| Model | Default: CV mean ± std (gap) | Tuned: nested CV mean ± std (gap) | Tuning score (best trial) | Chosen hyperparameters |
+|---|---|---|---|---|
+| Logistic regression | [0.670 ± 0.017 (+0.002)](results/week6_comparison/logistic_regression_default_cv_seed42.txt) | [0.670 ± 0.014 (+0.004)](results/week6_comparison/logistic_regression_tuned_50trials_seed42.txt) | 0.674 | `C=0.01533` |
+| Decision tree | [0.627 ± 0.016 (+0.175)](results/week6_comparison/decision_tree_default_cv_seed42.txt) | [0.678 ± 0.011 (+0.008)](results/week6_comparison/decision_tree_tuned_50trials_seed42.txt) | 0.680 | `max_depth=5`, `min_samples_leaf=1`, `criterion=entropy` |
+| Random forest | [0.631 ± 0.015 (+0.170)](results/week6_comparison/random_forest_default_cv_seed42.txt) | [0.676 ± 0.013 (+0.014)](results/week6_comparison/random_forest_tuned_50trials_seed42.txt) | 0.684 | `n_estimators=102`, `max_depth=None`, `min_samples_leaf=60`, `max_features=sqrt` |
+| Oblique random forest | [0.637 ± 0.011 (+0.164)](results/week6_comparison/oblique_random_forest_default_cv_seed42.txt) | [0.681 ± 0.012 (+0.009)](results/week6_comparison/oblique_random_forest_tuned_50trials_seed42.txt) | 0.683 | `tree.max_depth=10`, `tree.min_samples_leaf=22`, `project.n_components=7` (100 trees) |
+| AdaBoost | [0.668 ± 0.013 (+0.003)](results/week6_comparison/adaboost_default_cv_seed42.txt) | [0.680 ± 0.016 (+0.008)](results/week6_comparison/adaboost_tuned_50trials_seed42.txt) | 0.686 | `estimator.max_depth=6`, `n_estimators=301`, `learning_rate=0.01324` |
+| Dummy (most frequent, reference) | [0.549 ± 0.000 (-0.000)](results/week6_comparison/dummy_default_cv_seed42.txt) | — | — | No tuning |
+
+The gap is mean training score minus validation score, and std is the sample standard deviation across the five folds. The DT tuning still fixes min_samples_split: 10, as in Week 5; its default baseline uses the library default of 2. This week's default DT therefore differs from the restricted tree reported as my best model in Week 4. The new RF default also uses the library default of 100 trees, whereas the Week 4 forest used 300.
+
+For this comparison, I would choose the tuned oblique forest as my current accuracy candidate, with a nested CV result of **0.681 ± 0.012**. Its lead over AdaBoost is only 0.001, smaller than the fold-to-fold standard deviations, so I have not shown a clear winner. AdaBoost selected depth-6 trees with a small learning rate of 0.01324, allowing more complex learners to contribute in small steps over 301 rounds. The ordinary forest selected no maximum depth but at least 60 observations per leaf, while the oblique forest selected depth 10 and at least 22 per leaf, so both still restrict tree growth. I would report the oblique forest's **nested CV accuracy of 0.681 ± 0.012**, rather than its best-trial score of 0.683, as the estimate for its tuning procedure, with final test performance still unmeasured this week.
+
+I used the planned 50-trial runs for this table even where an earlier 5- or 15-trial run had a higher nested score. More trials improved the opportunity to find good inner-CV settings, but did not guarantee an improvement on outer validation rows.
+
+### Reproducing and keeping the results
+
+The full reports are in results/week6_comparison/, named by model, default or tuned mode, trial count and seed. The new runs also have JSON files with their exact configurations, and summary.csv / summary.json collect the values shown above. The existing AdaBoost and oblique reports were copied into this folder without deleting the originals; existing_run_sources.json records their original paths. The selected Week 6 reports are included in Git so the table links can be opened on GitHub; other generated results remain ignored.
+
+I added a comparison runner that calls the same main.main() workflow with temporary configuration overrides, leaving config.yaml unchanged:
+
+```bash
+python run_week6_comparison.py
+```
+
+It skips reports already present in results/week6_comparison/. To repeat the experiments from scratch, keep the existing folder as an archive and use an empty results/week6_comparison/ folder. For a single model, set its model.type and params in config.yaml and run python main.py; tuning.enabled: false produces the default CV comparison and true runs nested tuning.
+
+### Challenge 1: Feature engineering
+
+I added add_engineered_features() to src/preprocess.py, keeping my separate cleaning and preprocessing structure. It runs after cleaning and duplicate removal, before separating features and target and making the reserved split. My ColumnTransformer already detects numeric columns automatically, so the three new numeric columns enter its scaling and imputation pipeline without adding a separate numeric_features list.
+
+| Feature | Formula | Why I tried it |
+|---|---|---|
+| priors_per_adult_year (professor example) | `priors_count / (age - 17).clip(lower=1)` | Antecedents relative to approximate years of adult life. |
+| juvenile_offenses_total (my feature) | `juv_fel_count + juv_misd_count + juv_other_count` | Let a tree split directly on the total juvenile count. |
+| age_x_priors (my feature) | `age * priors_count` | Let the effect of priors depend on age, including in LR. |
+
+None of these formulas learns a mean, threshold or any other statistic from the dataset, so they are safe before the split. Missing inputs stay missing; for the juvenile total I require all three counts, rather than treating an unknown count as zero. The old juvenile_total column is not reused: the new total comes from the cleaned source columns. Imputation, scaling and encoding are still fitted only inside each training fold.
+
+I compared the three features together against the no-feature runs above for LR, RF and AdaBoost. Both conditions used 50 trials per search, the same search spaces, 5 inner folds, 5 outer folds, accuracy and seed 42. The existing no-feature runs were reused after checking their settings and the dataset fingerprint, and the new runs tuned again from scratch with the features enabled. Tests confirmed that the feature switch keeps exactly the same development and reserved-test row indices.
+
+| Model | Without features: nested CV mean ± std (gap) | With features: nested CV mean ± std (gap) | Accuracy difference (with minus without) |
+|---|---|---|---|
+| Logistic regression | [0.670 ± 0.014 (+0.004)](results/feature_engineering/without_features/logistic_regression_tuned_50trials_seed42.txt) | [0.674 ± 0.013 (+0.003)](results/feature_engineering/with_features/logistic_regression_tuned_50trials_seed42.txt) | +0.004 |
+| AdaBoost | [0.680 ± 0.016 (+0.008)](results/feature_engineering/without_features/adaboost_tuned_50trials_seed42.txt) | [0.678 ± 0.015 (+0.009)](results/feature_engineering/with_features/adaboost_tuned_50trials_seed42.txt) | -0.002 |
+| Random forest | [0.676 ± 0.013 (+0.014)](results/feature_engineering/without_features/random_forest_tuned_50trials_seed42.txt) | [0.676 ± 0.013 (+0.016)](results/feature_engineering/with_features/random_forest_tuned_50trials_seed42.txt) | +0.000 |
+
+The values and differences are displayed to three decimal places, so RF having the same displayed mean does not establish exact equality. The fold comparison CSV also uses the precision available in the saved reports.
+
+The linear model had the only positive change in recorded mean accuracy, increasing by 0.004, while RF stayed at 0.676 at the displayed precision and AdaBoost decreased by 0.002. The LR gain is smaller than its fold standard deviations of 0.014 without features and 0.013 with them, so these results do not establish a clear improvement. Its class 1 recall also fell from 0.52 to 0.47 and F1 fell from 0.59 to 0.57, meaning that the higher accuracy came with a tradeoff in identifying positive cases. The ratio and interaction can add relationships that LR could not directly express before, while the juvenile sum is already a linear combination on fully observed rows and trees can already learn interactions through their splits. Since I tested all three features together, I cannot say which individual feature caused the changes, and I would keep the no-feature ensemble comparison as my main reference for now.
+
+The feature switch is `preprocessing.engineered_features.enabled` in config.yaml, currently true for experimenting. To run the original features only, set it to false; run_week6_comparison.py explicitly disables it for the ensemble table above. To repeat this challenge comparison, run:
+
+```bash
+python run_feature_comparison.py
+```
+
+Reports and exact configurations are saved locally under results/feature_engineering/with_features/ and the baseline copies under without_features/. The folder also contains summary.csv, summary.json, fold_comparison.csv and method.json. Existing completed reports are skipped, and the original baseline files are preserved. The final tuned pipelines were refitted on development rows only; the reserved test set was not evaluated.
+
+### Challenge 2: Boosting Logistic Regression
+
+I also tried AdaBoost with LogisticRegression(max_iter=2000) as its base learner. I tuned the base learner's C from 0.0001 to 100 on a log scale, n_estimators from 25 to 400 and learning_rate from 0.01 to 1.0, using the same 50-trial budget, inner and outer folds, accuracy and seed 42. The engineered features stayed enabled for both boosted LR and its plain LR reference.
+
+| Model | Nested CV accuracy (mean ± std) | Train–validation gap | Class 1 recall | Class 1 F1 |
+|---|---|---|---|---|
+| Plain LR, with features | 0.674 ± 0.013 | +0.003 | 0.47 | 0.57 |
+| Boosted LR, with features | 0.676 ± 0.012 | +0.001 | 0.52 | 0.59 |
+
+The final search selected C = 0.0001062, 46 boosting rounds and learning_rate = 0.77636. Its best-trial score was 0.680, while the nested score was 0.676. Boosting gave a small increase of 0.002 in average accuracy and improved positive-class recall compared with plain LR with features, but the accuracy lead is smaller than the fold standard deviations, so I cannot claim a clear improvement.
+
+A weighted sum of raw linear scores is still linear: `sum(alpha_i * (w_i · x + b_i)) = W · x + B`. However, this scikit-learn AdaBoost implementation combines the learners' predicted classes through weighted votes, rather than adding their raw linear scores, so the resulting voting rule does not have to be a single linear boundary. The linearity statement applies to the inputs received by LR; with our ratio and interaction features, even a plain LR can already describe nonlinear relationships in the original inputs.
+
+The [full boosted LR report](results/adaboost_logistic_regression/adaboost_lr_seed42_50trials_features.txt) includes the outer-fold choices, classification and fairness reports, and final parameters. The final pipeline was refitted on all development rows, and the reserved test set remained unevaluated. Both the main feature-engineering challenge and this optional experiment are now complete.
+
+The active config is currently set to adaboost_logistic_regression with features enabled and 50 trials. Running `python main.py` repeats that experiment and saves its report under results/adaboost_logistic_regression/.
 
 #### have a nice weekend!

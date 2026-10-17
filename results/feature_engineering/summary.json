@@ -1,0 +1,44 @@
+[
+  {
+    "model": "logistic_regression",
+    "without_mean": 0.67,
+    "without_std": 0.014,
+    "without_gap": 0.004,
+    "with_mean": 0.674,
+    "with_std": 0.013,
+    "with_gap": 0.003,
+    "difference": 0.004,
+    "difference_exceeds_both_fold_stds": false,
+    "without_report": "results\\feature_engineering\\without_features\\logistic_regression_tuned_50trials_seed42.txt",
+    "with_report": "results\\feature_engineering\\with_features\\logistic_regression_tuned_50trials_seed42.txt",
+    "baseline_source": "results\\week6_comparison\\logistic_regression_tuned_50trials_seed42.txt"
+  },
+  {
+    "model": "adaboost",
+    "without_mean": 0.68,
+    "without_std": 0.016,
+    "without_gap": 0.008,
+    "with_mean": 0.678,
+    "with_std": 0.015,
+    "with_gap": 0.009,
+    "difference": -0.002,
+    "difference_exceeds_both_fold_stds": false,
+    "without_report": "results\\feature_engineering\\without_features\\adaboost_tuned_50trials_seed42.txt",
+    "with_report": "results\\feature_engineering\\with_features\\adaboost_tuned_50trials_seed42.txt",
+    "baseline_source": "results\\week6_comparison\\adaboost_tuned_50trials_seed42.txt"
+  },
+  {
+    "model": "random_forest",
+    "without_mean": 0.676,
+    "without_std": 0.013,
+    "without_gap": 0.014,
+    "with_mean": 0.676,
+    "with_std": 0.013,
+    "with_gap": 0.016,
+    "difference": 0.0,
+    "difference_exceeds_both_fold_stds": false,
+    "without_report": "results\\feature_engineering\\without_features\\random_forest_tuned_50trials_seed42.txt",
+    "with_report": "results\\feature_engineering\\with_features\\random_forest_tuned_50trials_seed42.txt",
+    "baseline_source": "results\\week6_comparison\\random_forest_tuned_50trials_seed42.txt"
+  }
+]

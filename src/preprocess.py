@@ -2,6 +2,7 @@
 Preprocessing functions for preparing cleaned data for model training.
 
 The preprocessing process:
+    - optionally creates fixed engineered features after cleaning;
     - creates missingness indicators for MNAR columns;
     - separates features, target, and fairness columns;
     - creates stratified training and test sets;
@@ -18,6 +19,25 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, RobustScaler, StandardScaler
 
 from src.cleaning import clean_dataset
+
+
+def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Add fixed row-wise formulas to cleaned data, without learning statistics.
+
+    Missing inputs remain missing; learned imputation is left to the pipeline.
+    Call after cleaning/deduplication so feature creation cannot change which
+    observations enter the reserved split.
+    """
+    out = df.copy()
+    out["priors_per_adult_year"] = (
+        out["priors_count"] / (out["age"] - 17).clip(lower=1)
+    )
+    juvenile_columns = ["juv_fel_count", "juv_misd_count", "juv_other_count"]
+    out["juvenile_offenses_total"] = out[juvenile_columns].sum(
+        axis=1, min_count=len(juvenile_columns)
+    )
+    out["age_x_priors"] = out["age"] * out["priors_count"]
+    return out
 
 
 def add_missingness_indicators(
@@ -213,7 +233,8 @@ def preprocess(
     """
     Prepare the data splits and an unfitted feature preprocessor.
 
-    The function cleans the dataset, creates MNAR indicators, separates
+    The function cleans the dataset, optionally adds fixed engineered features,
+    creates MNAR indicators, separates
     features and target, and splits the data. Feature imputation and encoding
     are fitted later inside the model pipeline, using training rows only.
 
@@ -233,6 +254,8 @@ def preprocess(
         and the unfitted feature preprocessor.
     """
     out = clean_dataset(df, diagnostics_config)
+    if preprocessing_config.get("engineered_features", {}).get("enabled", False):
+        out = add_engineered_features(out)
 
     indicator_columns = preprocessing_config.get(
         "missing_indicator_columns", []

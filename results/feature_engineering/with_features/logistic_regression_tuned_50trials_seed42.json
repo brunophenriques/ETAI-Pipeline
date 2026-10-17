@@ -1,0 +1,241 @@
+{
+  "data": {
+    "path": "data/compas_two_year_recidivism.csv",
+    "target": "two_year_recid",
+    "sensitive_attr": "race",
+    "drop_columns": [
+      "id",
+      "decile_score",
+      "score_text"
+    ]
+  },
+  "diagnostics": {
+    "id_column": "id",
+    "placeholder_tokens": [
+      "",
+      "-",
+      "?",
+      "N/A",
+      "NA",
+      "n/a",
+      "na"
+    ],
+    "missingness_verdicts": {
+      "age": "MCAR",
+      "juv_fel_count": "MCAR",
+      "priors_count": "MNAR",
+      "c_charge_degree": "MNAR",
+      "race": "MCAR",
+      "sex": "MCAR"
+    },
+    "validity_rules": {
+      "age": {
+        "min": 18,
+        "max": 100
+      },
+      "decile_score": {
+        "min": 1,
+        "max": 10
+      },
+      "juv_fel_count": {
+        "min": 0
+      },
+      "priors_count": {
+        "min": 0,
+        "max": 60
+      }
+    },
+    "numerical_columns": [
+      "age",
+      "decile_score",
+      "juv_fel_count",
+      "priors_count"
+    ],
+    "canonical_categories": {
+      "sex": {
+        "male": "Male",
+        "female": "Female"
+      },
+      "c_charge_degree": {
+        "f": "F",
+        "felony": "F",
+        "m": "M",
+        "misdemeanor": "M"
+      },
+      "score_text": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "race": {
+        "african-american": "African-American",
+        "african american": "African-American",
+        "asian": "Asian",
+        "caucasian": "Caucasian",
+        "hispanic": "Hispanic",
+        "native american": "Native American",
+        "other": "Other"
+      }
+    },
+    "columns_to_drop": [
+      "prior_offenses",
+      "age_in_months",
+      "juvenile_total",
+      "id"
+    ],
+    "duplicate_check": {
+      "exact_row_duplicates": 72,
+      "repeated_ids": 72
+    }
+  },
+  "preprocessing": {
+    "engineered_features": {
+      "enabled": true
+    },
+    "scaler": "standard",
+    "numerical_imputation": "median",
+    "n_neighbors": 5,
+    "categorical_imputation": "most_frequent",
+    "missing_indicator_columns": [
+      "priors_count",
+      "c_charge_degree"
+    ],
+    "extra_columns_to_impute": [
+      "race"
+    ]
+  },
+  "split": {
+    "test_size": 0.2,
+    "random_state": 42
+  },
+  "cv": {
+    "n_splits": 5,
+    "shuffle": true,
+    "random_state": 42,
+    "scoring": "accuracy",
+    "n_jobs": -1
+  },
+  "tuning": {
+    "enabled": true,
+    "n_trials": 50,
+    "n_splits": 5,
+    "random_state": 42,
+    "search_spaces": {
+      "adaboost": {
+        "classifier__estimator__max_depth": {
+          "type": "int",
+          "low": 1,
+          "high": 8
+        },
+        "classifier__n_estimators": {
+          "type": "int",
+          "low": 25,
+          "high": 400,
+          "log": true
+        },
+        "classifier__learning_rate": {
+          "type": "float",
+          "low": 0.01,
+          "high": 1.0,
+          "log": true
+        }
+      },
+      "oblique_random_forest": {
+        "classifier__estimator__tree__max_depth": {
+          "type": "int",
+          "low": 2,
+          "high": 30
+        },
+        "classifier__estimator__tree__min_samples_leaf": {
+          "type": "int",
+          "low": 1,
+          "high": 200,
+          "log": true
+        },
+        "classifier__estimator__project__n_components": {
+          "type": "int",
+          "low": 3,
+          "high": 10
+        }
+      },
+      "random_forest": {
+        "classifier__n_estimators": {
+          "type": "int",
+          "low": 100,
+          "high": 500
+        },
+        "classifier__max_depth": {
+          "type": "categorical",
+          "choices": [
+            null,
+            3,
+            5,
+            8,
+            12,
+            20
+          ]
+        },
+        "classifier__min_samples_leaf": {
+          "type": "int",
+          "low": 1,
+          "high": 100,
+          "log": true
+        },
+        "classifier__max_features": {
+          "type": "categorical",
+          "choices": [
+            "sqrt",
+            "log2",
+            null
+          ]
+        }
+      },
+      "logistic_regression": {
+        "classifier__C": {
+          "type": "float",
+          "low": 0.0001,
+          "high": 100,
+          "log": true
+        }
+      },
+      "decision_tree": {
+        "classifier__max_depth": {
+          "type": "int",
+          "low": 1,
+          "high": 20
+        },
+        "classifier__min_samples_leaf": {
+          "type": "int",
+          "low": 1,
+          "high": 200,
+          "log": true
+        },
+        "classifier__criterion": {
+          "type": "categorical",
+          "choices": [
+            "gini",
+            "entropy"
+          ]
+        }
+      }
+    }
+  },
+  "imputation_comparison": {
+    "holdout_seeds": [
+      0,
+      42,
+      123
+    ],
+    "validation_size": 0.25
+  },
+  "model": {
+    "type": "logistic_regression",
+    "params": {
+      "max_iter": 1000,
+      "solver": "lbfgs"
+    }
+  },
+  "output": {
+    "results_dir": "results\\feature_engineering\\with_features"
+  }
+}

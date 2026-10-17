@@ -1,0 +1,71 @@
+Run: 20261017_215055
+Model: oblique_random_forest  params={'n_estimators': 100, 'n_components': 10, 'random_state': 42, 'n_jobs': 1}
+Reserved test size: 0.2  random_state: 42
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'scoring': 'accuracy', 'n_jobs': -1}
+Preprocessing settings: {'scaler': 'standard', 'numerical_imputation': 'median', 'n_neighbors': 5, 'categorical_imputation': 'most_frequent', 'missing_indicator_columns': ['priors_count', 'c_charge_degree'], 'extra_columns_to_impute': ['race']}
+============================================================
+
+Nested cross-validation (5 stratified outer folds, metric: accuracy)
+Inner best scores selected parameters; outer validation scores evaluate tuning.
+
+ fold  train  validation    gap  inner_best  classifier__estimator__tree__max_depth  classifier__estimator__tree__min_samples_leaf  classifier__estimator__project__n_components
+    1  0.687       0.685  0.003       0.683                                      12                                            163                                             6
+    2  0.694       0.659  0.035       0.686                                      18                                             57                                             4
+    3  0.686       0.688 -0.002       0.681                                      26                                            145                                             5
+    4  0.684       0.687 -0.003       0.677                                       3                                              6                                            10
+    5  0.697       0.684  0.014       0.680                                       6                                              2                                             6
+
+Train       mean = 0.690   std = 0.006
+Validation  mean = 0.681   std = 0.012
+Gap         mean = 0.009   std = 0.016
+
+Nested CV accuracy (mean +/- std): 0.681 +/- 0.012
+Mean train-validation gap: +0.009
+Tuning settings: {'enabled': True, 'n_trials': 50, 'n_splits': 5, 'random_state': 42, 'search_spaces': {'adaboost': {'classifier__estimator__max_depth': {'type': 'int', 'low': 1, 'high': 8}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'oblique_random_forest': {'classifier__estimator__tree__max_depth': {'type': 'int', 'low': 2, 'high': 30}, 'classifier__estimator__tree__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__estimator__project__n_components': {'type': 'int', 'low': 3, 'high': 10}}, 'random_forest': {'classifier__n_estimators': {'type': 'int', 'low': 100, 'high': 500}, 'classifier__max_depth': {'type': 'categorical', 'choices': [None, 3, 5, 8, 12, 20]}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 100, 'log': True}, 'classifier__max_features': {'type': 'categorical', 'choices': ['sqrt', 'log2', None]}}, 'logistic_regression': {'classifier__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}}, 'decision_tree': {'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 20}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__criterion': {'type': 'categorical', 'choices': ['gini', 'entropy']}}}}
+
+Classification report (development set, nested out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.68      0.79      0.73      3170
+           1       0.68      0.54      0.60      2601
+
+    accuracy                           0.68      5771
+   macro avg       0.68      0.67      0.67      5771
+weighted avg       0.68      0.68      0.67      5771
+
+
+False positive rate by race (development set, nested out-of-fold predictions)
+(share of people who did NOT reoffend, but were predicted to)
+
+  Our model:
+    African-American     FPR = 0.28  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.14  (n=1161)
+    Hispanic             FPR = 0.14  (n=311)
+    Native American      FPR = 0.00  (n=6)
+    Other                FPR = 0.15  (n=185)
+    Unknown              FPR = 0.20  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+
+Final search on all development rows (metric: accuracy).
+Selected parameters: {'classifier__estimator__tree__max_depth': 10, 'classifier__estimator__tree__min_samples_leaf': 22, 'classifier__estimator__project__n_components': 7}
+Final classifier parameters: {'bootstrap': True, 'bootstrap_features': False, 'estimator__memory': None, 'estimator__steps': [('project', SparseRandomProjection(n_components=7)), ('tree', DecisionTreeClassifier(max_depth=10, max_features='sqrt', min_samples_leaf=22))], 'estimator__transform_input': None, 'estimator__verbose': False, 'estimator__project': SparseRandomProjection(n_components=7), 'estimator__tree': DecisionTreeClassifier(max_depth=10, max_features='sqrt', min_samples_leaf=22), 'estimator__project__compute_inverse_components': False, 'estimator__project__dense_output': False, 'estimator__project__density': 'auto', 'estimator__project__eps': 0.1, 'estimator__project__n_components': 7, 'estimator__project__random_state': None, 'estimator__tree__ccp_alpha': 0.0, 'estimator__tree__class_weight': None, 'estimator__tree__criterion': 'gini', 'estimator__tree__max_depth': 10, 'estimator__tree__max_features': 'sqrt', 'estimator__tree__max_leaf_nodes': None, 'estimator__tree__min_impurity_decrease': 0.0, 'estimator__tree__min_samples_leaf': 22, 'estimator__tree__min_samples_split': 2, 'estimator__tree__min_weight_fraction_leaf': 0.0, 'estimator__tree__monotonic_cst': None, 'estimator__tree__random_state': None, 'estimator__tree__splitter': 'best', 'estimator': Pipeline(steps=[('project', SparseRandomProjection(n_components=7)),
+                ('tree',
+                 DecisionTreeClassifier(max_depth=10, max_features='sqrt',
+                                        min_samples_leaf=22))]), 'max_features': 1.0, 'max_samples': None, 'n_estimators': 100, 'n_jobs': 1, 'oob_score': False, 'random_state': 42, 'verbose': 0, 'warm_start': False}
+Best Optuna trial score: 0.683
+Nested CV mean score: 0.681
+Optimism check (best trial - nested mean): +0.003
+This difference is descriptive; outer training sets are smaller, so it is not a pure estimate of selection bias.
+
+Final pipeline refit on 5771 development rows.
+Reserved test set: 1443 rows (not evaluated).

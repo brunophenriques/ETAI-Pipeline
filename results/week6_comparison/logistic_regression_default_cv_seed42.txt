@@ -1,0 +1,58 @@
+Model: logistic_regression
+Starting model parameters: {'max_iter': 1000, 'solver': 'lbfgs'}
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'scoring': 'accuracy', 'n_jobs': -1}
+Tuning enabled: False; trials per study: 0
+Full configuration: logistic_regression_default_cv_seed42.json
+Elapsed seconds: 5.14
+
+Cross-validation (5 stratified folds, metric: accuracy)
+
+ fold  train  validation    gap
+    1  0.675       0.667  0.009
+    2  0.672       0.647  0.025
+    3  0.671       0.679 -0.008
+    4  0.668       0.692 -0.023
+    5  0.673       0.665  0.009
+
+Train       mean = 0.672   std = 0.003
+Validation  mean = 0.670   std = 0.017
+Gap         mean = 0.002   std = 0.018
+
+CV accuracy (mean +/- std): 0.670 +/- 0.017
+Mean train-validation gap: +0.002
+
+Classification report (development set, out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.67      0.77      0.72      3170
+           1       0.66      0.55      0.60      2601
+
+    accuracy                           0.67      5771
+   macro avg       0.67      0.66      0.66      5771
+weighted avg       0.67      0.67      0.67      5771
+
+
+False positive rate by race (development set, out-of-fold predictions)
+(share of people who did NOT reoffend, but were predicted to)
+
+  Our model:
+    African-American     FPR = 0.30  (n=1420)
+    Asian                FPR = 0.19  (n=21)
+    Caucasian            FPR = 0.16  (n=1161)
+    Hispanic             FPR = 0.20  (n=311)
+    Native American      FPR = 0.00  (n=6)
+    Other                FPR = 0.16  (n=185)
+    Unknown              FPR = 0.27  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+
+Final pipeline refit on 5771 development rows.
+Reserved test set: 1443 rows (not evaluated).

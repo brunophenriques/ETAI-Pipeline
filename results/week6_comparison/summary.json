@@ -1,0 +1,86 @@
+[
+  {
+    "model": "logistic_regression",
+    "default_cv_mean": 0.67,
+    "default_cv_std": 0.017,
+    "default_cv_gap": 0.002,
+    "default_cv_report": "results\\week6_comparison\\logistic_regression_default_cv_seed42.txt",
+    "tuned_50trials_mean": 0.67,
+    "tuned_50trials_std": 0.014,
+    "tuned_50trials_gap": 0.004,
+    "tuned_50trials_report": "results\\week6_comparison\\logistic_regression_tuned_50trials_seed42.txt",
+    "best_trial": 0.674,
+    "chosen_parameters": {
+      "classifier__C": 0.015329350636161615
+    }
+  },
+  {
+    "model": "decision_tree",
+    "default_cv_mean": 0.627,
+    "default_cv_std": 0.016,
+    "default_cv_gap": 0.175,
+    "default_cv_report": "results\\week6_comparison\\decision_tree_default_cv_seed42.txt",
+    "tuned_50trials_mean": 0.678,
+    "tuned_50trials_std": 0.011,
+    "tuned_50trials_gap": 0.008,
+    "tuned_50trials_report": "results\\week6_comparison\\decision_tree_tuned_50trials_seed42.txt",
+    "best_trial": 0.68,
+    "chosen_parameters": {
+      "classifier__max_depth": 5,
+      "classifier__min_samples_leaf": 1,
+      "classifier__criterion": "entropy"
+    }
+  },
+  {
+    "model": "random_forest",
+    "default_cv_mean": 0.631,
+    "default_cv_std": 0.015,
+    "default_cv_gap": 0.17,
+    "default_cv_report": "results\\week6_comparison\\random_forest_default_cv_seed42.txt",
+    "tuned_50trials_mean": 0.676,
+    "tuned_50trials_std": 0.013,
+    "tuned_50trials_gap": 0.014,
+    "tuned_50trials_report": "results\\week6_comparison\\random_forest_tuned_50trials_seed42.txt",
+    "best_trial": 0.684,
+    "chosen_parameters": {
+      "classifier__n_estimators": 102,
+      "classifier__max_depth": null,
+      "classifier__min_samples_leaf": 60,
+      "classifier__max_features": "sqrt"
+    }
+  },
+  {
+    "model": "oblique_random_forest",
+    "default_cv_mean": 0.637,
+    "default_cv_std": 0.011,
+    "default_cv_gap": 0.164,
+    "default_cv_report": "results\\week6_comparison\\oblique_random_forest_default_cv_seed42.txt",
+    "tuned_50trials_mean": 0.681,
+    "tuned_50trials_std": 0.012,
+    "tuned_50trials_gap": 0.009,
+    "tuned_50trials_report": "results\\week6_comparison\\oblique_random_forest_tuned_50trials_seed42.txt",
+    "best_trial": 0.683,
+    "chosen_parameters": {
+      "classifier__estimator__tree__max_depth": 10,
+      "classifier__estimator__tree__min_samples_leaf": 22,
+      "classifier__estimator__project__n_components": 7
+    }
+  },
+  {
+    "model": "adaboost",
+    "default_cv_mean": 0.668,
+    "default_cv_std": 0.013,
+    "default_cv_gap": 0.003,
+    "default_cv_report": "results\\week6_comparison\\adaboost_default_cv_seed42.txt",
+    "tuned_50trials_mean": 0.68,
+    "tuned_50trials_std": 0.016,
+    "tuned_50trials_gap": 0.008,
+    "tuned_50trials_report": "results\\week6_comparison\\adaboost_tuned_50trials_seed42.txt",
+    "best_trial": 0.686,
+    "chosen_parameters": {
+      "classifier__estimator__max_depth": 6,
+      "classifier__n_estimators": 301,
+      "classifier__learning_rate": 0.013244015961389539
+    }
+  }
+]

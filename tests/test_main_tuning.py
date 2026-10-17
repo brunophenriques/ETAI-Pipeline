@@ -31,6 +31,10 @@ class MainTuningTests(unittest.TestCase):
             for enabled in [True, False]:
                 with self.subTest(tuning_enabled=enabled):
                     config = copy.deepcopy(base_config)
+                    # Keep this synthetic routing check independent of the active experiment.
+                    config["model"] = {
+                        "type": "decision_tree", "params": {"random_state": 42}
+                    }
                     config["cv"].update(n_splits=3, n_jobs=1, scoring="balanced_accuracy")
                     config["tuning"].update(enabled=enabled, n_trials=2, n_splits=2)
                     prep = build_feature_preprocessor(X, config["preprocessing"])

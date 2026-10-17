@@ -1,0 +1,68 @@
+Model: random_forest
+Starting model parameters: {'n_estimators': 300, 'random_state': 42, 'n_jobs': 1}
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'scoring': 'accuracy', 'n_jobs': -1}
+Tuning enabled: True; trials per study: 50
+Full configuration: random_forest_tuned_50trials_seed42.json
+Elapsed seconds: 358.35
+
+Nested cross-validation (5 stratified outer folds, metric: accuracy)
+Inner best scores selected parameters; outer validation scores evaluate tuning.
+
+ fold  train  validation    gap  inner_best  classifier__n_estimators  classifier__max_depth  classifier__min_samples_leaf classifier__max_features
+    1  0.690       0.678  0.013       0.683                       272                     12                            36                     sqrt
+    2  0.698       0.655  0.043       0.690                       150                      5                             4                     log2
+    3  0.685       0.692 -0.007       0.678                       491                     12                            52                     sqrt
+    4  0.684       0.675  0.009       0.681                       297                      8                            95                      NaN
+    5  0.690       0.679  0.011       0.681                       155                     12                            25                     sqrt
+
+Train       mean = 0.689   std = 0.005
+Validation  mean = 0.676   std = 0.013
+Gap         mean = 0.014   std = 0.018
+
+Nested CV accuracy (mean +/- std): 0.676 +/- 0.013
+Mean train-validation gap: +0.014
+Tuning settings: {'enabled': True, 'n_trials': 50, 'n_splits': 5, 'random_state': 42, 'search_spaces': {'adaboost': {'classifier__estimator__max_depth': {'type': 'int', 'low': 1, 'high': 8}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'oblique_random_forest': {'classifier__estimator__tree__max_depth': {'type': 'int', 'low': 2, 'high': 30}, 'classifier__estimator__tree__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__estimator__project__n_components': {'type': 'int', 'low': 3, 'high': 10}}, 'random_forest': {'classifier__n_estimators': {'type': 'int', 'low': 100, 'high': 500}, 'classifier__max_depth': {'type': 'categorical', 'choices': [None, 3, 5, 8, 12, 20]}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 100, 'log': True}, 'classifier__max_features': {'type': 'categorical', 'choices': ['sqrt', 'log2', None]}}, 'logistic_regression': {'classifier__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}}, 'decision_tree': {'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 20}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__criterion': {'type': 'categorical', 'choices': ['gini', 'entropy']}}}}
+
+Classification report (development set, nested out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.68      0.77      0.72      3170
+           1       0.67      0.56      0.61      2601
+
+    accuracy                           0.68      5771
+   macro avg       0.67      0.67      0.67      5771
+weighted avg       0.67      0.68      0.67      5771
+
+
+False positive rate by race (development set, nested out-of-fold predictions)
+(share of people who did NOT reoffend, but were predicted to)
+
+  Our model:
+    African-American     FPR = 0.30  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.17  (n=1161)
+    Hispanic             FPR = 0.16  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.17  (n=185)
+    Unknown              FPR = 0.20  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+
+Final search on all development rows (metric: accuracy).
+Selected parameters: {'classifier__n_estimators': 102, 'classifier__max_depth': None, 'classifier__min_samples_leaf': 60, 'classifier__max_features': 'sqrt'}
+Final classifier parameters: {'bootstrap': True, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini', 'max_depth': None, 'max_features': 'sqrt', 'max_leaf_nodes': None, 'max_samples': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 60, 'min_samples_split': 2, 'min_weight_fraction_leaf': 0.0, 'monotonic_cst': None, 'n_estimators': 102, 'n_jobs': 1, 'oob_score': False, 'random_state': 42, 'verbose': 0, 'warm_start': False}
+Best Optuna trial score: 0.684
+Nested CV mean score: 0.676
+Optimism check (best trial - nested mean): +0.008
+This difference is descriptive; outer training sets are smaller, so it is not a pure estimate of selection bias.
+
+Final pipeline refit on 5771 development rows.
+Reserved test set: 1443 rows (not evaluated).

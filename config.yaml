@@ -99,6 +99,10 @@ diagnostics:
 
 
 preprocessing:
+  # Fixed formulas after cleaning; numeric columns are detected automatically.
+  engineered_features:
+    enabled: true
+
   # Scale before imputation: none, standard, or robust.
   # KNN requires standard or robust so distances use comparable units.
   scaler: "standard"
@@ -136,11 +140,65 @@ cv:
 
 tuning:
   enabled: true
-  n_trials: 15
+  n_trials: 50  # Final comparison budget; use 5 while testing code changes.
   n_splits: 5       # Inner CV: evaluates each trial
   random_state: 42  # Seeds inner CV and Optuna's TPE sampler
 
   search_spaces:
+    adaboost_logistic_regression:
+      classifier__estimator__C:
+        type: float
+        low: 0.0001
+        high: 100
+        log: true
+
+      classifier__n_estimators:
+        type: int
+        low: 25
+        high: 400
+        log: true
+
+      classifier__learning_rate:
+        type: float
+        low: 0.01
+        high: 1.0
+        log: true
+
+    adaboost:
+      classifier__estimator__max_depth:
+        type: int
+        low: 1
+        high: 8
+
+      classifier__n_estimators:
+        type: int
+        low: 25
+        high: 400
+        log: true
+
+      classifier__learning_rate:
+        type: float
+        low: 0.01
+        high: 1.0
+        log: true
+
+    oblique_random_forest:
+      classifier__estimator__tree__max_depth:
+        type: int
+        low: 2
+        high: 30
+
+      classifier__estimator__tree__min_samples_leaf:
+        type: int
+        low: 1
+        high: 200
+        log: true
+
+      classifier__estimator__project__n_components:
+        type: int
+        low: 3
+        high: 10
+
     random_forest:
       classifier__n_estimators:
         type: int
@@ -191,17 +249,43 @@ imputation_comparison:
   validation_size: 0.25
 
 
-# Supported types: dummy, logistic_regression, decision_tree, random_forest.
+# Supported types: dummy, logistic_regression, decision_tree, random_forest,
+# oblique_random_forest, adaboost, adaboost_logistic_regression.
 # Replace the entire model block (including params) when switching models.
 model:
-  type: "random_forest"
+  type: "adaboost_logistic_regression"
   params:
-    n_estimators: 300
+    C: 1.0
+    max_iter: 2000
+    n_estimators: 50
+    learning_rate: 1.0
     random_state: 42
-    n_jobs: 1  # CV parallelizes folds; each forest uses one worker.
 
 
 # Alternative model blocks:
+# model:
+#   type: "oblique_random_forest"
+#   params:
+#     n_estimators: 100
+#     n_components: 10
+#     random_state: 42
+#     n_jobs: 1
+#
+# model:
+#   type: "adaboost"
+#   params:
+#     max_depth: 1
+#     n_estimators: 50
+#     learning_rate: 1.0
+#     random_state: 42
+#
+# model:
+#   type: "random_forest"
+#   params:
+#     n_estimators: 300
+#     random_state: 42
+#     n_jobs: 1
+#
 # model:
 #   type: "dummy"
 #   params:
@@ -223,4 +307,4 @@ model:
 
 
 output:
-  results_dir: "results"
+  results_dir: "results/adaboost_logistic_regression"

@@ -1,0 +1,4 @@
+{
+  "adaboost": "results\\adaboost_seed42_50trials.txt",
+  "oblique_random_forest": "results\\run_20261017_215055.txt"
+}

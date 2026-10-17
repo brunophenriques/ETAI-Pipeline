@@ -1,0 +1,68 @@
+Model: logistic_regression
+Starting model parameters: {'max_iter': 1000, 'solver': 'lbfgs'}
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'scoring': 'accuracy', 'n_jobs': -1}
+Tuning enabled: True; trials per study: 50
+Full configuration: logistic_regression_tuned_50trials_seed42.json
+Elapsed seconds: 24.47
+
+Nested cross-validation (5 stratified outer folds, metric: accuracy)
+Inner best scores selected parameters; outer validation scores evaluate tuning.
+
+ fold  train  validation    gap  inner_best  classifier__C
+    1  0.680       0.666  0.014       0.675          0.028
+    2  0.675       0.651  0.024       0.676          0.054
+    3  0.674       0.680 -0.006       0.673          0.015
+    4  0.670       0.688 -0.018       0.671          0.051
+    5  0.671       0.666  0.005       0.674          0.009
+
+Train       mean = 0.674   std = 0.004
+Validation  mean = 0.670   std = 0.014
+Gap         mean = 0.004   std = 0.016
+
+Nested CV accuracy (mean +/- std): 0.670 +/- 0.014
+Mean train-validation gap: +0.004
+Tuning settings: {'enabled': True, 'n_trials': 50, 'n_splits': 5, 'random_state': 42, 'search_spaces': {'adaboost': {'classifier__estimator__max_depth': {'type': 'int', 'low': 1, 'high': 8}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'oblique_random_forest': {'classifier__estimator__tree__max_depth': {'type': 'int', 'low': 2, 'high': 30}, 'classifier__estimator__tree__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__estimator__project__n_components': {'type': 'int', 'low': 3, 'high': 10}}, 'random_forest': {'classifier__n_estimators': {'type': 'int', 'low': 100, 'high': 500}, 'classifier__max_depth': {'type': 'categorical', 'choices': [None, 3, 5, 8, 12, 20]}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 100, 'log': True}, 'classifier__max_features': {'type': 'categorical', 'choices': ['sqrt', 'log2', None]}}, 'logistic_regression': {'classifier__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}}, 'decision_tree': {'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 20}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__criterion': {'type': 'categorical', 'choices': ['gini', 'entropy']}}}}
+
+Classification report (development set, nested out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.67      0.79      0.72      3170
+           1       0.67      0.52      0.59      2601
+
+    accuracy                           0.67      5771
+   macro avg       0.67      0.66      0.66      5771
+weighted avg       0.67      0.67      0.66      5771
+
+
+False positive rate by race (development set, nested out-of-fold predictions)
+(share of people who did NOT reoffend, but were predicted to)
+
+  Our model:
+    African-American     FPR = 0.28  (n=1420)
+    Asian                FPR = 0.14  (n=21)
+    Caucasian            FPR = 0.14  (n=1161)
+    Hispanic             FPR = 0.18  (n=311)
+    Native American      FPR = 0.00  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.24  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+
+Final search on all development rows (metric: accuracy).
+Selected parameters: {'classifier__C': 0.015329350636161615}
+Final classifier parameters: {'C': 0.015329350636161615, 'class_weight': None, 'dual': False, 'fit_intercept': True, 'intercept_scaling': 1, 'l1_ratio': 0.0, 'max_iter': 1000, 'n_jobs': None, 'penalty': 'deprecated', 'random_state': None, 'solver': 'lbfgs', 'tol': 0.0001, 'verbose': 0, 'warm_start': False}
+Best Optuna trial score: 0.674
+Nested CV mean score: 0.670
+Optimism check (best trial - nested mean): +0.004
+This difference is descriptive; outer training sets are smaller, so it is not a pure estimate of selection bias.
+
+Final pipeline refit on 5771 development rows.
+Reserved test set: 1443 rows (not evaluated).
