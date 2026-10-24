@@ -1,0 +1,11 @@
+{
+  "models": 10,
+  "folds_checked": 50,
+  "metrics_per_model": 8,
+  "trials_per_tuned_study": 15,
+  "same_development_rows": true,
+  "same_comparison_id": true,
+  "reserved_test_evaluated": false,
+  "maximum_auc_difference_probability_vs_sklearn_scorer": 1.5166221790652301e-06,
+  "note": "Tiny ROC differences can arise when a decision score saturates after conversion to a probability."
+}

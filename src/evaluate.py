@@ -1,7 +1,10 @@
 """Development-set cross-validation and final holdout evaluation helpers."""
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import (
+    accuracy_score, classification_report, confusion_matrix, get_scorer,
+    make_scorer, precision_score, recall_score, f1_score, fbeta_score,
+)
 from sklearn.model_selection import StratifiedKFold, cross_validate
 from scipy.stats import t
 
@@ -35,14 +38,82 @@ def corrected_paired_comparison(differences, validation_train_ratio: float) -> d
     }
 
 
-def cross_validate_pipeline(pipeline, X, y, cv_config: dict) -> tuple[str, np.ndarray]:
+def build_scorers(metrics: list) -> dict:
+    """Build the reported scorers; binary metrics use class 1 and zero_division=0."""
+    scorers = {}
+    safe = {"precision": precision_score, "recall": recall_score, "f1": f1_score}
+    for name in metrics:
+        if name.startswith("fbeta_"):
+            beta = float(name.split("_", 1)[1])
+            if not np.isfinite(beta) or beta <= 0:
+                raise ValueError("F-beta requires a positive finite beta.")
+            scorers[name] = make_scorer(fbeta_score, beta=beta, zero_division=0)
+        elif name in safe:
+            scorers[name] = make_scorer(safe[name], zero_division=0)
+        else:
+            scorers[name] = get_scorer(name)
+    if not scorers:
+        raise ValueError("Configure at least one metric.")
+    return scorers
+
+
+def positive_proba(estimator, X):
+    """Return class-1 probabilities explicitly, independent of class-column order."""
+    classes = np.asarray(estimator.classes_)
+    if set(classes) != {0, 1}:
+        raise ValueError("This project expects binary labels 0 and 1.")
+    values = estimator.predict_proba(X)[:, np.flatnonzero(classes == 1)[0]]
+    if not np.isfinite(values).all() or ((values < 0) | (values > 1)).any():
+        raise ValueError("Invalid positive-class probabilities.")
+    return values
+
+
+def partition_folds(cv, X, y):
+    """Materialize a partition and reject overlap or missing/repeated OOF rows."""
+    folds = list(cv.split(X, y)) if hasattr(cv, "split") else list(cv)
+    counts = np.zeros(len(y), dtype=int)
+    for train, val in folds:
+        if np.intersect1d(train, val).size:
+            raise ValueError("Training and validation rows must be disjoint.")
+        np.add.at(counts, val, 1)
+    if not np.all(counts == 1):
+        raise ValueError("Each row must occur in exactly one validation fold.")
+    return folds
+
+
+def cross_validate_pipeline(
+    pipeline, X, y, cv_config, scorers=None, selection_metric=None, n_jobs=1
+):
     """Refit the complete pipeline inside each development-set fold.
 
-    Return a printable report with per-fold scores, sample standard
-    deviations, and the training-validation gap, plus one out-of-fold
-    prediction per development row in its original positional order.
-    Predictions reuse the fold estimators; no test rows are used.
+    With scorers supplied, return (fold-score DataFrame, class-1 OOF
+    probabilities). Every scorer is evaluated on validation rows; train and
+    gap columns describe selection_metric. OOF order matches X and y.
+
+    The legacy single-metric cv_config call still returns (text, hard labels).
+    Both modes reuse the fitted fold estimators; no reserved test rows are used.
     """
+    if scorers is not None:
+        if selection_metric not in scorers:
+            raise ValueError("selection_metric must be one of the reported metrics.")
+        folds = partition_folds(cv_config, X, y)
+        scores = cross_validate(
+            pipeline, X, y, cv=folds, scoring=scorers, n_jobs=n_jobs,
+            return_train_score=True, return_estimator=True,
+            return_indices=True, error_score="raise",
+        )
+        frame = pd.DataFrame({"fold": range(1, len(folds) + 1)})
+        frame["train"] = scores[f"train_{selection_metric}"]
+        frame["validation"] = scores[f"test_{selection_metric}"]
+        frame["gap"] = frame["train"] - frame["validation"]
+        for name in scorers:
+            frame[name] = scores[f"test_{name}"]
+        probabilities = np.empty(len(y))
+        for estimator, indices in zip(scores["estimator"], scores["indices"]["test"]):
+            probabilities[indices] = positive_proba(estimator, X.iloc[indices])
+        return frame, probabilities
+
+    # Compatibility with the Week 4-6 single-metric API.
     shuffle = cv_config.get("shuffle", True)
     cv = StratifiedKFold(
         n_splits=cv_config["n_splits"],
@@ -122,12 +193,21 @@ def format_nested_cv_report(folds: pd.DataFrame, scoring: str) -> str:
 
 
 def oof_classification_report(
-    y_true, y_pred, context: str = "development set, out-of-fold predictions"
+    y_true, y_pred, context: str = "development set, out-of-fold predictions",
+    probabilities: bool = True, threshold: float = 0.5,
 ) -> str:
-    """Report classification metrics on unseen-fold development predictions."""
+    """Threshold class-1 OOF probabilities at 0.5 and report a confusion matrix.
+
+    Binary 0/1 hard predictions are also accepted, for the earlier API.
+    """
+    if probabilities:
+        y_pred = (np.asarray(y_pred) >= threshold).astype(int)
+    matrix = confusion_matrix(y_true, y_pred, labels=[0, 1])
     report = (
         f"Classification report ({context}):\n"
         + classification_report(y_true, y_pred, zero_division=0)
+        + "\nConfusion matrix (rows=true, columns=predicted; labels=[0, 1]):\n"
+        + np.array2string(matrix)
     )
     print(report)
     return report
@@ -161,6 +241,8 @@ def fairness_report(
     extras_test: pd.DataFrame,
     sensitive_attr: str = "race",
     context: str = "test set",
+    probabilities: bool = True,
+    threshold: float = 0.5,
 ) -> str:
     """
     Deliberately simple fairness check -- not a substitute for a real audit, just enough to show that "accuracy" and "fair" are not the same thing.
@@ -172,6 +254,8 @@ def fairness_report(
         - COMPAS's own risk score (score_text != "Low" counts as a "high risk" prediction), for comparison
     """
     df = extras_test.copy()
+    if probabilities:
+        y_pred = (np.asarray(y_pred) >= threshold).astype(int)
     df["y_true"] = np.asarray(y_test)
     df["y_pred_model"] = y_pred
     df["y_pred_compas"] = (df["score_text"] != "Low").astype(int)
@@ -197,3 +281,17 @@ def fairness_report(
     text = "\n".join(lines)
     print(text)
     return text
+
+
+def cv_report(folds, metrics, selection_metric, title="Cross-validation"):
+    """Format every metric and the selection metric's train-validation gap."""
+    lines = [f"{title} ({len(folds)} stratified folds, selection metric: {selection_metric})",
+             folds.to_string(index=False, float_format=lambda x: f"{x:.4f}"), ""]
+    for name in metrics:
+        lines.append(f"{name:<20s} {folds[name].mean():.4f} +/- {folds[name].std(ddof=1):.4f}")
+    prefix = "Nested CV" if "Nested" in title else "CV"
+    lines.extend([
+        f"{prefix} {selection_metric} (mean +/- std): {folds['validation'].mean():.3f} +/- {folds['validation'].std(ddof=1):.3f}",
+        f"Mean train-validation gap: {folds['gap'].mean():+.3f}",
+    ])
+    return "\n".join(lines)

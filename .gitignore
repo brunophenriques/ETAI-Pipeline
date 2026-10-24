@@ -9,3 +9,6 @@ results/*
 !results/week6_comparison/
 !results/feature_engineering/
 !results/adaboost_logistic_regression/
+!results/week7/
+!results/runs.csv
+results/week7/smoke/

@@ -36,6 +36,7 @@ class MainTuningTests(unittest.TestCase):
                         "type": "decision_tree", "params": {"random_state": 42}
                     }
                     config["cv"].update(n_splits=3, n_jobs=1, scoring="balanced_accuracy")
+                    config["cv"]["selection_metric"] = "balanced_accuracy"
                     config["tuning"].update(enabled=enabled, n_trials=2, n_splits=2)
                     prep = build_feature_preprocessor(X, config["preprocessing"])
                     with (
@@ -43,6 +44,8 @@ class MainTuningTests(unittest.TestCase):
                         patch("main.load_data", return_value=None),
                         patch("main.preprocess", return_value=(X, ReservedRows(), y, None, extras, None, prep)),
                         patch("main.save_run", return_value="synthetic-report.txt") as save,
+                        patch("main.save_scores", side_effect=lambda path, row: pd.DataFrame([row])),
+                        patch("pandas.DataFrame.to_csv"),
                         patch("main.nested_cross_validate", wraps=main.nested_cross_validate) as nested,
                         patch("main.cross_validate_pipeline", wraps=main.cross_validate_pipeline) as ordinary,
                         patch("main.tune_pipeline", wraps=main.tune_pipeline) as final_search,
@@ -55,7 +58,7 @@ class MainTuningTests(unittest.TestCase):
                     self.assertIn("balanced_accuracy", report)
                     self.assertIn("Reserved test set: 4 rows (not evaluated)", report)
                     self.assertEqual(nested.call_count, int(enabled))
-                    self.assertEqual(ordinary.call_count, int(not enabled))
+                    self.assertEqual(ordinary.call_count, 2)  # floor and untuned baseline
                     self.assertEqual(final_search.call_count, int(enabled))
                     if enabled:
                         self.assertIs(final_search.call_args.args[1], X)
@@ -65,7 +68,7 @@ class MainTuningTests(unittest.TestCase):
                         self.assertIn("Optimism check", report)
                     else:
                         self.assertNotIn("Optimism check", report)
-                    self.assertEqual(build.call_count, 1)
+                    self.assertEqual(build.call_count, 2)
         finally:
             optuna.logging.set_verbosity(previous_verbosity)
 

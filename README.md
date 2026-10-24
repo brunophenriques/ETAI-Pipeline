@@ -71,6 +71,7 @@ These findings were documented in `notebooks/week3/01_eda_introduction.ipynb`. D
 | 4 | Added cross-validation, kept the test set aside, added Dummy and Random Forest, and compared median with KNN imputation. |
 | 5 | Added Optuna tuning and nested cross-validation, then tuned Logistic Regression and Random Forest and compared them with the tuned Decision Tree. |
 | 6 | Added AdaBoost and a projection-based oblique forest, compared the model families with 50-trial nested tuning, tested three engineered features, and compared boosted LR with plain LR. The final test set stayed aside. |
+| 7 | Added Gradient Boosting, HistGradientBoosting and Naive Bayes, eight evaluation metrics, OOF probabilities and confusion matrices, and a ROC-AUC scoreboard with untuned and nested results. |
 
 __________
 
@@ -266,5 +267,64 @@ A weighted sum of raw linear scores is still linear: `sum(alpha_i * (w_i · x + 
 The [full boosted LR report](results/adaboost_logistic_regression/adaboost_lr_seed42_50trials_features.txt) includes the outer-fold choices, classification and fairness reports, and final parameters. The final pipeline was refitted on all development rows, and the reserved test set remained unevaluated. Both the main feature-engineering challenge and this optional experiment are now complete.
 
 The active config is currently set to adaboost_logistic_regression with features enabled and 50 trials. Running `python main.py` repeats that experiment and saves its report under results/adaboost_logistic_regression/.
+
+#### have a nice weekend!
+
+__________
+
+**Week 7**:
+
+This week, I added GradientBoostingClassifier, HistGradientBoostingClassifier and GaussianNB to my model registry and their search spaces to config.yaml. I kept my separate cleaning.py and preprocess.py, including the three engineered features, standard scaling and median imputation. All comparisons used the same 5,771 development rows and five stratified outer folds with seed 42; the 1,443 reserved test rows were not evaluated.
+
+### Several metrics and OOF probabilities
+
+I now report accuracy, balanced accuracy, precision, recall, F1, F2, ROC-AUC and average precision for every model. The tuning objective uses only cv.selection_metric, while all eight metrics are evaluated on the untouched validation folds. The pipeline is refitted independently within each inner fold, as before. Classification reports and fairness reports use the final OOF probabilities at a threshold of 0.5, and each full report includes a confusion matrix with rows representing true labels and columns representing predictions.
+
+### Selection metric
+
+I chose **ROC-AUC** because it compares how well the models rank positive cases above negative cases without fixing one classification threshold. Accuracy at 0.5 could hide useful differences in those scores, so I used ROC-AUC for tuning and the scoreboard. I still report recall, F2, average precision and group false-positive rates because a higher AUC does not by itself show that the final decisions are fair or useful.
+
+### Scoreboard
+
+The source is [results/runs.csv](results/runs.csv), with one completed run per model below. Every tuned model used the same budget of **15 Optuna trials per study**, five inner folds and seed 42, including the final search on all development rows. I used a smaller budget than the Week 6 final runs to finish within the available time, and did not choose different budgets according to each model's result. Dummy has no search space and is untuned. Untuned means the starting parameters recorded in the run configuration, not a tuned model evaluated again on its selection folds.
+
+| Model | Untuned ROC-AUC mean ± std (gap) | Tuned nested ROC-AUC mean ± std (gap) | Dummy floor | Best final tuning score |
+|---|---|---|---|---|
+| [Dummy (prior)](results/week7/dummy_20261024_221211_485737.txt) | 0.5000 ± 0.0000 (+0.0000) | — | 0.5000 | — |
+| [Logistic regression](results/week7/logistic_regression_20261024_221223_089263.txt) | 0.7223 ± 0.0156 (+0.0030) | 0.7222 ± 0.0134 (+0.0026) | 0.5000 | 0.7232 |
+| [Gaussian Naive Bayes](results/week7/naive_bayes_20261024_221236_258435.txt) | 0.6996 ± 0.0137 (+0.0010) | 0.7001 ± 0.0137 (+0.0008) | 0.5000 | 0.7001 |
+| [Decision tree](results/week7/decision_tree_20261024_221246_769637.txt) | 0.6320 ± 0.0096 (+0.2709) | 0.7167 ± 0.0107 (+0.0167) | 0.5000 | 0.7160 |
+| [Random forest](results/week7/random_forest_20261024_221443_766044.txt) | 0.6651 ± 0.0137 (+0.2297) | 0.7265 ± 0.0129 (+0.0156) | 0.5000 | 0.7277 |
+| [Oblique random forest](results/week7/oblique_random_forest_20261024_221729_817984.txt) | 0.6697 ± 0.0122 (+0.2251) | 0.7257 ± 0.0127 (+0.0207) | 0.5000 | 0.7274 |
+| [AdaBoost (trees)](results/week7/adaboost_20261024_221919_983122.txt) | 0.7183 ± 0.0168 (+0.0086) | 0.7257 ± 0.0113 (+0.0135) | 0.5000 | 0.7265 |
+| [Gradient Boosting](results/week7/gradient_boosting_20261024_221331_064059.txt) | 0.7237 ± 0.0144 (+0.0359) | 0.7258 ± 0.0128 (+0.0117) | 0.5000 | 0.7276 |
+| [HistGradientBoosting](results/week7/hist_gradient_boosting_20261024_221256_638212.txt) | 0.7063 ± 0.0189 (+0.1016) | 0.7244 ± 0.0140 (+0.0160) | 0.5000 | 0.7261 |
+| [AdaBoost (Logistic Regression)](results/week7/adaboost_logistic_regression_20261024_222140_559867.txt) | 0.6965 ± 0.0183 (+0.0046) | 0.7177 ± 0.0112 (+0.0024) | 0.5000 | 0.7197 |
+
+The gap is training ROC-AUC minus validation ROC-AUC, and std is the sample standard deviation across the five outer folds. The no-model floor is a DummyClassifier(strategy="prior") pipeline evaluated on exactly the same folds. Its constant within-fold score gives ROC-AUC 0.5000. Best final tuning scores are selection scores, not the numbers I use to rank the tuned procedures.
+
+Random Forest has the highest recorded nested mean, **0.7265 ± 0.0129**, but its lead over Gradient Boosting is only about 0.0007, much smaller than their fold-to-fold standard deviations. Gradient Boosting, the oblique forest and tree-based AdaBoost are also close, so I have not established a clear winner. The unrestricted DT and forests had large baseline gaps, and tuning reduced those gaps substantially. Tuning did not improve every baseline: for example, LR remained around 0.722, and boosted LR finished below plain LR on this selection metric. If I report one result from this comparison, I would use Random Forest's **nested ROC-AUC**, alongside that uncertainty and the other metrics, rather than its best Optuna trial score.
+
+These are new ROC-AUC-selected experiments, so the earlier Week 6 accuracy table is kept as history rather than treated as the same ranking. The final chosen parameters came from a separate search on all development rows after nested evaluation, and each final winner was refitted on development rows only.
+
+### Saved evidence and reproduction
+
+Each model link above opens its full report. results/week7/ also contains the exact configuration, default and nested per-fold CSVs, final Optuna trials, and OOF probabilities with their original row indices. The experiment plan, environment versions and validation checks are recorded there too. The ROC-AUC scorer can use decision scores, while the exported OOF files contain probabilities; probability saturation introduced only a tiny last-decimal AUC difference (below 0.000002) in one LR fold.
+
+The CSV scoreboard appends runs instead of replacing older ones. It records the untuned result, nested result, standard deviations, gaps, no-model floor, chosen parameters and all eight metrics, and the printed board filters to matching data, preprocessing, folds and selection metric. I tested that a second run is appended without losing the first. The untuned Gradient Boosting integration check was stored separately under results/week7/smoke/, outside the final scoreboard.
+
+For one model, select model.type and its params in config.yaml and run:
+
+```bash
+python main.py
+```
+
+Use tuning.enabled: false for an untuned-only check, and true for nested tuning when the model has a search space. To reproduce or resume the complete comparison with the fixed 15-trial budget:
+
+```bash
+python run_week7.py
+```
+
+The runner skips completed models whose reports are already present. Use five trials while testing implementation changes; the results in this table are the completed 15-trial runs. No final test performance is reported because that set remains reserved.
 
 #### have a nice weekend!

@@ -6,6 +6,7 @@ import pandas as pd
 from sklearn.base import clone
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import cross_val_score
+from src.evaluate import partition_folds, positive_proba
 
 
 def tune_pipeline(
@@ -13,7 +14,7 @@ def tune_pipeline(
     X,
     y,
     cv,
-    scoring: str,
+    scoring,
     search_space: dict,
     n_trials: int,
     random_state: int,
@@ -28,6 +29,7 @@ def tune_pipeline(
 
     The best trial's mean CV score is a selection score, not an independent
     performance estimate. Evaluate the tuning procedure with nested CV.
+    scoring accepts a sklearn metric name or scorer callable.
     Trials run sequentially for reproducibility; n_jobs parallelizes CV.
     """
     if isinstance(n_trials, bool) or not isinstance(n_trials, int) or n_trials < 1:
@@ -85,6 +87,7 @@ def nested_cross_validate(
     n_trials: int,
     random_state: int,
     n_jobs: int = 1,
+    scorers: dict | None = None,
 ) -> tuple[pd.DataFrame, np.ndarray]:
     """Evaluate tuning with untouched outer validation folds.
 
@@ -96,9 +99,12 @@ def nested_cross_validate(
     Return outer-fold scores and selected parameters, plus predictions in
     the original positional order for classification and fairness reports.
     This does not select or fit a final pipeline on all development rows.
+    With scorers supplied, include every validation metric and return class-1
+    probabilities; the earlier single-metric API returns hard predictions.
     """
-    scorer = get_scorer(scoring)
-    folds = list(outer_cv.split(X, y))
+    scorer = (scorers[scoring] if scorers is not None else
+              get_scorer(scoring) if isinstance(scoring, str) else scoring)
+    folds = partition_folds(outer_cv, X, y)
     validation_counts = np.zeros(len(y), dtype=int)
     for train_idx, val_idx in folds:
         if np.intersect1d(train_idx, val_idx).size:
@@ -107,28 +113,51 @@ def nested_cross_validate(
     if not np.all(validation_counts == 1):
         raise ValueError("Each row must occur in exactly one outer validation fold.")
 
-    y_oof = np.empty(len(y), dtype=np.asarray(y).dtype)
+    y_oof = np.empty(len(y), dtype=float if scorers is not None else np.asarray(y).dtype)
     rows = []
     for fold, (train_idx, val_idx) in enumerate(folds, start=1):
         X_train, y_train = X.iloc[train_idx], y.iloc[train_idx]
         X_val, y_val = X.iloc[val_idx], y.iloc[val_idx]
 
         best_pipeline, study = tune_pipeline(
-            pipeline, X_train, y_train, inner_cv, scoring,
+            pipeline, X_train, y_train, inner_cv,
+            scorers[scoring] if scorers is not None else scoring,
             search_space, n_trials, random_state, n_jobs,
         )
         best_pipeline.fit(X_train, y_train)
 
         train_score = float(scorer(best_pipeline, X_train, y_train))
         val_score = float(scorer(best_pipeline, X_val, y_val))
-        y_oof[val_idx] = best_pipeline.predict(X_val)
+        y_oof[val_idx] = (positive_proba(best_pipeline, X_val) if scorers is not None
+                          else best_pipeline.predict(X_val))
+        extra_scores = ({name: float(metric(best_pipeline, X_val, y_val))
+                         for name, metric in scorers.items()} if scorers is not None else {})
         rows.append({
             "fold": fold,
             "train": train_score,
             "validation": val_score,
             "gap": train_score - val_score,
             "inner_best": float(study.best_value),
+            **extra_scores,
             **study.best_params,
         })
 
     return pd.DataFrame(rows), y_oof
+
+
+def tuning_report(study, nested_scores, selection_metric, top=5):
+    """Report final choices and the descriptive inner-versus-outer optimism check."""
+    inner = nested_scores["inner_best"].mean()
+    outer = nested_scores["validation"].mean()
+    trials = study.trials_dataframe(attrs=("number", "value", "params", "user_attrs"))
+    return (
+        f"Final search ({len(study.trials)} trials, metric: {selection_metric})\n"
+        f"Selected parameters: {study.best_params}\n"
+        f"Best Optuna trial score: {study.best_value:.4f}\n"
+        f"Nested CV mean score: {outer:.4f}\n"
+        f"Mean inner best score: {inner:.4f}\n"
+        f"Optimism check (mean inner best - outer mean): {inner - outer:+.4f}\n"
+        "Descriptive comparison: inner models use smaller training samples; not a pure bias estimate.\n"
+        f"Top {top} final trials:\n"
+        + trials.sort_values("value", ascending=False).head(top).to_string(index=False)
+    )

@@ -134,17 +134,35 @@ cv:
   n_splits: 5
   shuffle: true
   random_state: 42
-  scoring: "accuracy"
+  metrics: ["accuracy", "balanced_accuracy", "precision", "recall", "f1", "fbeta_2", "roc_auc", "average_precision"]
+  selection_metric: "roc_auc"
   n_jobs: -1
 
 
 tuning:
   enabled: true
-  n_trials: 50  # Final comparison budget; use 5 while testing code changes.
+  n_trials: 15  # Common Week 7 final budget; use 5 while testing.
   n_splits: 5       # Inner CV: evaluates each trial
   random_state: 42  # Seeds inner CV and Optuna's TPE sampler
 
   search_spaces:
+    gradient_boosting:
+      classifier__n_estimators: {type: int, low: 25, high: 500, log: true}
+      classifier__learning_rate: {type: float, low: 0.01, high: 0.5, log: true}
+      classifier__max_depth: {type: int, low: 1, high: 6}
+      classifier__min_samples_leaf: {type: int, low: 1, high: 200, log: true}
+      classifier__subsample: {type: float, low: 0.5, high: 1.0}
+
+    hist_gradient_boosting:
+      classifier__max_iter: {type: int, low: 25, high: 500, log: true}
+      classifier__learning_rate: {type: float, low: 0.01, high: 0.5, log: true}
+      classifier__max_leaf_nodes: {type: int, low: 2, high: 63, log: true}
+      classifier__min_samples_leaf: {type: int, low: 5, high: 200, log: true}
+      classifier__l2_regularization: {type: float, low: 0.000001, high: 10.0, log: true}
+
+    naive_bayes:
+      classifier__var_smoothing: {type: float, low: 0.000000000001, high: 0.01, log: true}
+
     adaboost_logistic_regression:
       classifier__estimator__C:
         type: float
@@ -250,19 +268,25 @@ imputation_comparison:
 
 
 # Supported types: dummy, logistic_regression, decision_tree, random_forest,
-# oblique_random_forest, adaboost, adaboost_logistic_regression.
+# oblique_random_forest, adaboost, adaboost_logistic_regression,
+# gradient_boosting, hist_gradient_boosting, naive_bayes.
 # Replace the entire model block (including params) when switching models.
 model:
-  type: "adaboost_logistic_regression"
+  type: "gradient_boosting"
   params:
-    C: 1.0
-    max_iter: 2000
-    n_estimators: 50
-    learning_rate: 1.0
     random_state: 42
 
 
 # Alternative model blocks:
+# model:
+#   type: "naive_bayes"
+#   params: {}
+#
+# model:
+#   type: "hist_gradient_boosting"
+#   params:
+#     random_state: 42
+#
 # model:
 #   type: "oblique_random_forest"
 #   params:
@@ -307,4 +331,5 @@ model:
 
 
 output:
-  results_dir: "results/adaboost_logistic_regression"
+  results_dir: "results/week7"
+  scoreboard: "results/runs.csv"

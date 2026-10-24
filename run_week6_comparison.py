@@ -54,9 +54,11 @@ def run_one(base_config, name, params, tuned):
     config["model"] = {"type": name, "params": copy.deepcopy(params)}
     config["split"].update(test_size=0.2, random_state=42)
     config["cv"].update(n_splits=5, shuffle=True, random_state=42,
-                        scoring="accuracy", n_jobs=-1)
+                        scoring="accuracy", metrics=["accuracy"],
+                        selection_metric="accuracy", n_jobs=-1)
     config["tuning"].update(enabled=tuned, n_trials=50, n_splits=5, random_state=42)
     config["output"]["results_dir"] = str(OUTPUT)
+    config["output"]["scoreboard"] = str(OUTPUT / "runs.csv")
     config_path.write_text(json.dumps(config, indent=2), encoding="utf-8")
     started = perf_counter()
 

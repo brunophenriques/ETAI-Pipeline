@@ -4,3 +4,4 @@ scikit-learn>=1.9
 PyYAML>=6.0
 scipy>=1.10
 optuna>=4.0
+threadpoolctl>=3.1

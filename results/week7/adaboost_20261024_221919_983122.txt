@@ -1,0 +1,101 @@
+Run: 20261024_221919_983122
+Model: adaboost  params={'random_state': 42}
+Reserved test size: 0.2  random_state: 42
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'metrics': ['accuracy', 'balanced_accuracy', 'precision', 'recall', 'f1', 'fbeta_2', 'roc_auc', 'average_precision'], 'selection_metric': 'roc_auc', 'n_jobs': -1}
+Preprocessing settings: {'engineered_features': {'enabled': True}, 'scaler': 'standard', 'numerical_imputation': 'median', 'n_neighbors': 5, 'categorical_imputation': 'most_frequent', 'missing_indicator_columns': ['priors_count', 'c_charge_degree'], 'extra_columns_to_impute': ['race']}
+Tuning settings: {'enabled': True, 'n_trials': 15, 'n_splits': 5, 'random_state': 42, 'search_spaces': {'gradient_boosting': {'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 500, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.5, 'log': True}, 'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 6}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__subsample': {'type': 'float', 'low': 0.5, 'high': 1.0}}, 'hist_gradient_boosting': {'classifier__max_iter': {'type': 'int', 'low': 25, 'high': 500, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.5, 'log': True}, 'classifier__max_leaf_nodes': {'type': 'int', 'low': 2, 'high': 63, 'log': True}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 5, 'high': 200, 'log': True}, 'classifier__l2_regularization': {'type': 'float', 'low': 1e-06, 'high': 10.0, 'log': True}}, 'naive_bayes': {'classifier__var_smoothing': {'type': 'float', 'low': 1e-12, 'high': 0.01, 'log': True}}, 'adaboost_logistic_regression': {'classifier__estimator__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'adaboost': {'classifier__estimator__max_depth': {'type': 'int', 'low': 1, 'high': 8}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'oblique_random_forest': {'classifier__estimator__tree__max_depth': {'type': 'int', 'low': 2, 'high': 30}, 'classifier__estimator__tree__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__estimator__project__n_components': {'type': 'int', 'low': 3, 'high': 10}}, 'random_forest': {'classifier__n_estimators': {'type': 'int', 'low': 100, 'high': 500}, 'classifier__max_depth': {'type': 'categorical', 'choices': [None, 3, 5, 8, 12, 20]}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 100, 'log': True}, 'classifier__max_features': {'type': 'categorical', 'choices': ['sqrt', 'log2', None]}}, 'logistic_regression': {'classifier__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}}, 'decision_tree': {'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 20}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__criterion': {'type': 'categorical', 'choices': ['gini', 'entropy']}}}}
+============================================================
+
+Cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation     gap  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision
+    1 0.7254      0.7226  0.0027    0.6701             0.6563     0.6768  0.5144 0.5845   0.5403   0.7226             0.6672
+    2 0.7312      0.6885  0.0427    0.6568             0.6427     0.6566  0.5000 0.5677   0.5250   0.6885             0.6474
+    3 0.7284      0.7252  0.0032    0.6776             0.6631     0.6907  0.5154 0.5903   0.5429   0.7252             0.6910
+    4 0.7276      0.7265  0.0011    0.6785             0.6621     0.7030  0.4962 0.5817   0.5272   0.7265             0.6982
+    5 0.7223      0.7288 -0.0065    0.6742             0.6583     0.6925  0.4981 0.5794   0.5277   0.7288             0.6722
+
+accuracy             0.6715 +/- 0.0088
+balanced_accuracy    0.6565 +/- 0.0082
+precision            0.6839 +/- 0.0179
+recall               0.5048 +/- 0.0093
+f1                   0.5807 +/- 0.0084
+fbeta_2              0.5326 +/- 0.0083
+roc_auc              0.7183 +/- 0.0168
+average_precision    0.6752 +/- 0.0201
+CV roc_auc (mean +/- std): 0.718 +/- 0.017
+Mean train-validation gap: +0.009
+
+No-model floor (dummy, same folds): roc_auc = 0.5000
+
+Nested cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation    gap  inner_best  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision  classifier__estimator__max_depth  classifier__n_estimators  classifier__learning_rate
+    1 0.7376      0.7290 0.0086      0.7254    0.6771             0.6644     0.6805  0.5355 0.5994   0.5593   0.7290             0.6747                                 3                       349                     0.2911
+    2 0.7481      0.7056 0.0425      0.7331    0.6629             0.6535     0.6459  0.5577 0.5986   0.5733   0.7056             0.6706                                 4                        55                     0.1674
+    3 0.7363      0.7323 0.0039      0.7240    0.6872             0.6771     0.6811  0.5750 0.6236   0.5935   0.7323             0.7008                                 3                       349                     0.2911
+    4 0.7325      0.7314 0.0011      0.7206    0.6820             0.6646     0.7155  0.4885 0.5806   0.5216   0.7314             0.7099                                 3                       367                     0.0130
+    5 0.7417      0.7300 0.0117      0.7221    0.6724             0.6607     0.6682  0.5423 0.5987   0.5635   0.7300             0.6737                                 4                        55                     0.1674
+
+accuracy             0.6763 +/- 0.0093
+balanced_accuracy    0.6641 +/- 0.0086
+precision            0.6782 +/- 0.0252
+recall               0.5398 +/- 0.0325
+f1                   0.6002 +/- 0.0153
+fbeta_2              0.5623 +/- 0.0263
+roc_auc              0.7257 +/- 0.0113
+average_precision    0.6859 +/- 0.0181
+Nested CV roc_auc (mean +/- std): 0.726 +/- 0.011
+Mean train-validation gap: +0.014
+
+Final search (15 trials, metric: roc_auc)
+Selected parameters: {'classifier__estimator__max_depth': 3, 'classifier__n_estimators': 349, 'classifier__learning_rate': 0.29106359131330695}
+Best Optuna trial score: 0.7265
+Nested CV mean score: 0.7257
+Mean inner best score: 0.7251
+Optimism check (mean inner best - outer mean): -0.0006
+Descriptive comparison: inner models use smaller training samples; not a pure bias estimate.
+Top 5 final trials:
+ number    value  params_classifier__estimator__max_depth  params_classifier__learning_rate  params_classifier__n_estimators                                                                               user_attrs_fold_scores  user_attrs_std
+      0 0.726518                                        3                          0.291064                              349 [0.7290154216896649, 0.7043117568551323, 0.7323374181024025, 0.7346608832807571, 0.7322661368599855]        0.012575
+      8 0.726346                                        4                          0.025081                              220 [0.7291183540509939, 0.7048486411065276, 0.7325588449405485, 0.7332807570977918, 0.7319248968696919]        0.012121
+      6 0.725266                                        4                          0.167381                               55  [0.727802939021658, 0.7056115020626063, 0.7322995025479252, 0.7306236350400388, 0.7299942368357196]        0.011105
+     14 0.724560                                        6                          0.056368                              272 [0.7227062734246807, 0.7031803567095365, 0.7315518078136375, 0.7329455835962146, 0.7324162824557146]        0.012663
+     12 0.723639                                        2                          0.553089                              367  [0.7270960358931199, 0.6972928294103372, 0.728168223732104, 0.7302672288279544, 0.7353706624605678]        0.015068
+
+Classification report (development set, nested out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.68      0.79      0.73      3170
+           1       0.68      0.54      0.60      2601
+
+    accuracy                           0.68      5771
+   macro avg       0.68      0.66      0.66      5771
+weighted avg       0.68      0.68      0.67      5771
+
+Confusion matrix (rows=true, columns=predicted; labels=[0, 1]):
+[[2499  671]
+ [1197 1404]]
+
+False positive rate by race (development set, nested out-of-fold predictions)
+(share of people who did NOT reoffend, but were predicted to)
+
+  Our model:
+    African-American     FPR = 0.28  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.15  (n=1161)
+    Hispanic             FPR = 0.15  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.15  (n=185)
+    Unknown              FPR = 0.23  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+
+Final pipeline refit on 5771 development rows.
+Reserved test set: 1443 rows (not evaluated).

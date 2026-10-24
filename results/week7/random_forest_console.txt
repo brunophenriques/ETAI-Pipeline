@@ -1,0 +1,141 @@
+Model: random_forest; selection: roc_auc; development rows: 5771
+Nested tuning: 15 trials per study
+Classification report (development set, nested out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.67      0.80      0.73      3170
+           1       0.68      0.53      0.60      2601
+
+    accuracy                           0.68      5771
+   macro avg       0.68      0.66      0.66      5771
+weighted avg       0.68      0.68      0.67      5771
+
+Confusion matrix (rows=true, columns=predicted; labels=[0, 1]):
+[[2525  645]
+ [1225 1376]]
+False positive rate by race (development set, nested out-of-fold predictions)
+(share of people who did NOT reoffend, but were predicted to)
+
+  Our model:
+    African-American     FPR = 0.28  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.14  (n=1161)
+    Hispanic             FPR = 0.14  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.13  (n=185)
+    Unknown              FPR = 0.20  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+Cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation    gap  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision
+    1 0.8932      0.6689 0.2243    0.6303             0.6212     0.6031  0.5278 0.5629   0.5413   0.6689             0.6031
+    2 0.8987      0.6410 0.2577    0.6040             0.5971     0.5649  0.5269 0.5453   0.5341   0.6410             0.5878
+    3 0.8926      0.6750 0.2176    0.6360             0.6283     0.6059  0.5500 0.5766   0.5603   0.6750             0.6247
+    4 0.8950      0.6725 0.2225    0.6438             0.6345     0.6203  0.5404 0.5776   0.5547   0.6725             0.6232
+    5 0.8946      0.6679 0.2266    0.6464             0.6397     0.6162  0.5712 0.5928   0.5796   0.6679             0.5814
+
+accuracy             0.6321 +/- 0.0170
+balanced_accuracy    0.6242 +/- 0.0167
+precision            0.6021 +/- 0.0219
+recall               0.5433 +/- 0.0183
+f1                   0.5710 +/- 0.0179
+fbeta_2              0.5540 +/- 0.0177
+roc_auc              0.6651 +/- 0.0137
+average_precision    0.6040 +/- 0.0198
+CV roc_auc (mean +/- std): 0.665 +/- 0.014
+Mean train-validation gap: +0.230
+
+No-model floor (dummy, same folds): roc_auc = 0.5000
+
+Nested cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation     gap  inner_best  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision  classifier__n_estimators  classifier__max_depth  classifier__min_samples_leaf classifier__max_features
+    1 0.7440      0.7294  0.0146      0.7256    0.6788             0.6655     0.6866  0.5298 0.5980   0.5551   0.7294             0.6765                       310                 5.0000                             1                     sqrt
+    2 0.7494      0.7040  0.0454      0.7348    0.6542             0.6431     0.6404  0.5308 0.5804   0.5496   0.7040             0.6694                       307                 5.0000                             4                     log2
+    3 0.7384      0.7307  0.0077      0.7253    0.6872             0.6759     0.6871  0.5615 0.6180   0.5828   0.7307             0.6947                       462                    NaN                            59                     log2
+    4 0.7355      0.7369 -0.0015      0.7219    0.6863             0.6701     0.7147  0.5058 0.5923   0.5372   0.7369             0.7218                       377                    NaN                            79                     log2
+    5 0.7433      0.7314  0.0119      0.7238    0.6733             0.6593     0.6810  0.5173 0.5880   0.5434   0.7314             0.6840                       198                 5.0000                             1                     sqrt
+
+accuracy             0.6760 +/- 0.0134
+balanced_accuracy    0.6628 +/- 0.0126
+precision            0.6819 +/- 0.0267
+recall               0.5290 +/- 0.0208
+f1                   0.5954 +/- 0.0142
+fbeta_2              0.5536 +/- 0.0177
+roc_auc              0.7265 +/- 0.0129
+average_precision    0.6893 +/- 0.0205
+Nested CV roc_auc (mean +/- std): 0.726 +/- 0.013
+Mean train-validation gap: +0.016
+
+Final search (15 trials, metric: roc_auc)
+Selected parameters: {'classifier__n_estimators': 462, 'classifier__max_depth': None, 'classifier__min_samples_leaf': 59, 'classifier__max_features': 'log2'}
+Best Optuna trial score: 0.7277
+Nested CV mean score: 0.7265
+Mean inner best score: 0.7263
+Optimism check (mean inner best - outer mean): -0.0002
+Descriptive comparison: inner models use smaller training samples; not a pure bias estimate.
+Top 5 final trials:
+ number    value  params_classifier__max_depth params_classifier__max_features  params_classifier__min_samples_leaf  params_classifier__n_estimators                                                                               user_attrs_fold_scores  user_attrs_std
+     10 0.727717                           NaN                            log2                                   59                              462 [0.7293090816616917, 0.7089693035670954, 0.7306630672166949, 0.7371724096093181, 0.7324708808541617]        0.010894
+      0 0.727492                           NaN                            log2                                   49                              250  [0.7291637653868743, 0.7084764013588936, 0.7302323465178355, 0.7373862533365687, 0.732202438728464]        0.011090
+     11 0.727242                           NaN                            log2                                   79                              377 [0.7290366136464093, 0.7081139286580928, 0.7305599369085174, 0.7369085173501577, 0.7315912399902937]        0.011096
+     12 0.727143                           8.0                            log2                                   34                              283 [0.7287671730535188, 0.7062909487988352, 0.7316776874545013, 0.7368645353069644, 0.7321144746420771]        0.012013
+      2 0.726895                           5.0                            sqrt                                    1                              217 [0.7295134326731534, 0.7047621936423198, 0.7320735258432418, 0.7366188425139529, 0.7315093423926231]        0.012643
+
+Classification report (development set, nested out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.67      0.80      0.73      3170
+           1       0.68      0.53      0.60      2601
+
+    accuracy                           0.68      5771
+   macro avg       0.68      0.66      0.66      5771
+weighted avg       0.68      0.68      0.67      5771
+
+Confusion matrix (rows=true, columns=predicted; labels=[0, 1]):
+[[2525  645]
+ [1225 1376]]
+
+False positive rate by race (development set, nested out-of-fold predictions)
+(share of people who did NOT reoffend, but were predicted to)
+
+  Our model:
+    African-American     FPR = 0.28  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.14  (n=1161)
+    Hispanic             FPR = 0.14  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.13  (n=185)
+    Unknown              FPR = 0.20  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+
+Final pipeline refit on 5771 development rows.
+Reserved test set: 1443 rows (not evaluated).
+
+
+Scoreboard (same data, features, folds and selection metric):
+                 model  tuned  untuned     mean      std  floor
+         random_forest   True 0.665072 0.726488 0.012871    0.5
+     gradient_boosting   True 0.723653 0.725775 0.012773    0.5
+hist_gradient_boosting   True 0.706323 0.724431 0.013995    0.5
+   logistic_regression   True 0.722319 0.722204 0.013424    0.5
+         decision_tree   True 0.632013 0.716679 0.010701    0.5
+           naive_bayes   True 0.699587 0.700145 0.013669    0.5
+                 dummy  False 0.500000 0.500000 0.000000    0.5
+Full results saved to results/week7\random_forest_20261024_221443_766044.txt

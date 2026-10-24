@@ -1,0 +1,263 @@
+{
+  "dataset_sha256": "6a747fd4a04d545976510401695587984a06662ea319b614fbf079b61201161a",
+  "preprocessing": {
+    "engineered_features": {
+      "enabled": true
+    },
+    "scaler": "standard",
+    "numerical_imputation": "median",
+    "n_neighbors": 5,
+    "categorical_imputation": "most_frequent",
+    "missing_indicator_columns": [
+      "priors_count",
+      "c_charge_degree"
+    ],
+    "extra_columns_to_impute": [
+      "race"
+    ]
+  },
+  "split": {
+    "test_size": 0.2,
+    "random_state": 42
+  },
+  "cv": {
+    "n_splits": 5,
+    "shuffle": true,
+    "random_state": 42,
+    "metrics": [
+      "accuracy",
+      "balanced_accuracy",
+      "precision",
+      "recall",
+      "f1",
+      "fbeta_2",
+      "roc_auc",
+      "average_precision"
+    ],
+    "selection_metric": "roc_auc",
+    "n_jobs": -1
+  },
+  "trials": 15,
+  "models": {
+    "dummy": {
+      "strategy": "prior"
+    },
+    "logistic_regression": {
+      "max_iter": 2000
+    },
+    "naive_bayes": {},
+    "decision_tree": {
+      "random_state": 42
+    },
+    "hist_gradient_boosting": {
+      "random_state": 42
+    },
+    "gradient_boosting": {
+      "random_state": 42
+    },
+    "random_forest": {
+      "random_state": 42,
+      "n_jobs": 1
+    },
+    "oblique_random_forest": {
+      "random_state": 42,
+      "n_jobs": 1
+    },
+    "adaboost": {
+      "random_state": 42
+    },
+    "adaboost_logistic_regression": {
+      "random_state": 42,
+      "max_iter": 2000
+    }
+  },
+  "search_spaces": {
+    "gradient_boosting": {
+      "classifier__n_estimators": {
+        "type": "int",
+        "low": 25,
+        "high": 500,
+        "log": true
+      },
+      "classifier__learning_rate": {
+        "type": "float",
+        "low": 0.01,
+        "high": 0.5,
+        "log": true
+      },
+      "classifier__max_depth": {
+        "type": "int",
+        "low": 1,
+        "high": 6
+      },
+      "classifier__min_samples_leaf": {
+        "type": "int",
+        "low": 1,
+        "high": 200,
+        "log": true
+      },
+      "classifier__subsample": {
+        "type": "float",
+        "low": 0.5,
+        "high": 1.0
+      }
+    },
+    "hist_gradient_boosting": {
+      "classifier__max_iter": {
+        "type": "int",
+        "low": 25,
+        "high": 500,
+        "log": true
+      },
+      "classifier__learning_rate": {
+        "type": "float",
+        "low": 0.01,
+        "high": 0.5,
+        "log": true
+      },
+      "classifier__max_leaf_nodes": {
+        "type": "int",
+        "low": 2,
+        "high": 63,
+        "log": true
+      },
+      "classifier__min_samples_leaf": {
+        "type": "int",
+        "low": 5,
+        "high": 200,
+        "log": true
+      },
+      "classifier__l2_regularization": {
+        "type": "float",
+        "low": 1e-06,
+        "high": 10.0,
+        "log": true
+      }
+    },
+    "naive_bayes": {
+      "classifier__var_smoothing": {
+        "type": "float",
+        "low": 1e-12,
+        "high": 0.01,
+        "log": true
+      }
+    },
+    "adaboost_logistic_regression": {
+      "classifier__estimator__C": {
+        "type": "float",
+        "low": 0.0001,
+        "high": 100,
+        "log": true
+      },
+      "classifier__n_estimators": {
+        "type": "int",
+        "low": 25,
+        "high": 400,
+        "log": true
+      },
+      "classifier__learning_rate": {
+        "type": "float",
+        "low": 0.01,
+        "high": 1.0,
+        "log": true
+      }
+    },
+    "adaboost": {
+      "classifier__estimator__max_depth": {
+        "type": "int",
+        "low": 1,
+        "high": 8
+      },
+      "classifier__n_estimators": {
+        "type": "int",
+        "low": 25,
+        "high": 400,
+        "log": true
+      },
+      "classifier__learning_rate": {
+        "type": "float",
+        "low": 0.01,
+        "high": 1.0,
+        "log": true
+      }
+    },
+    "oblique_random_forest": {
+      "classifier__estimator__tree__max_depth": {
+        "type": "int",
+        "low": 2,
+        "high": 30
+      },
+      "classifier__estimator__tree__min_samples_leaf": {
+        "type": "int",
+        "low": 1,
+        "high": 200,
+        "log": true
+      },
+      "classifier__estimator__project__n_components": {
+        "type": "int",
+        "low": 3,
+        "high": 10
+      }
+    },
+    "random_forest": {
+      "classifier__n_estimators": {
+        "type": "int",
+        "low": 100,
+        "high": 500
+      },
+      "classifier__max_depth": {
+        "type": "categorical",
+        "choices": [
+          null,
+          3,
+          5,
+          8,
+          12,
+          20
+        ]
+      },
+      "classifier__min_samples_leaf": {
+        "type": "int",
+        "low": 1,
+        "high": 100,
+        "log": true
+      },
+      "classifier__max_features": {
+        "type": "categorical",
+        "choices": [
+          "sqrt",
+          "log2",
+          null
+        ]
+      }
+    },
+    "logistic_regression": {
+      "classifier__C": {
+        "type": "float",
+        "low": 0.0001,
+        "high": 100,
+        "log": true
+      }
+    },
+    "decision_tree": {
+      "classifier__max_depth": {
+        "type": "int",
+        "low": 1,
+        "high": 20
+      },
+      "classifier__min_samples_leaf": {
+        "type": "int",
+        "low": 1,
+        "high": 200,
+        "log": true
+      },
+      "classifier__criterion": {
+        "type": "categorical",
+        "choices": [
+          "gini",
+          "entropy"
+        ]
+      }
+    }
+  }
+}

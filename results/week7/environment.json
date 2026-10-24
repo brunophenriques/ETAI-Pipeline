@@ -1,0 +1,8 @@
+{
+  "scikit_learn": "1.9.1",
+  "optuna": "5.0.0",
+  "pandas": "3.0.5",
+  "numpy": "2.5.3",
+  "threadpoolctl": "3.7.0",
+  "note": "Same 15-trial budget for every tuned model; five outer and five inner stratified folds. Per-fold preprocessing remains inside the pipeline."
+}

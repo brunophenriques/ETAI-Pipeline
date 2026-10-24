@@ -44,6 +44,9 @@ def fold_values(report):
 def run():
     OUTPUT.mkdir(parents=True, exist_ok=True)
     config = main.load_config()
+    # Preserve the original accuracy experiment independently of the Week 7 metric selection.
+    config["cv"] = {"n_splits": 5, "shuffle": True, "random_state": 42,
+                    "scoring": "accuracy", "n_jobs": -1}
     provenance = json.loads(Path("results/week6_comparison/provenance.json").read_text(encoding="utf-8"))
     if sha256(Path(config["data"]["path"]).read_bytes()).hexdigest() != provenance["dataset_sha256"]:
         raise ValueError("The dataset changed; regenerate the no-feature baselines first.")
