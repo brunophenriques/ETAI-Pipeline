@@ -38,6 +38,21 @@ def corrected_paired_comparison(differences, validation_train_ratio: float) -> d
     }
 
 
+def corrected_paired_test(scores_a, scores_b, test_train_ratio: float = .25) -> dict:
+    """Approximate corrected two-sided paired test, with difference A minus B.
+
+    Reuses the Nadeau-Bengio correction used in the Week 4 imputation test.
+    The validation/train ratio refers to the paired outer evaluation folds.
+    A nonsignificant result is not evidence that the procedures are equivalent.
+    """
+    a, b = np.asarray(scores_a, dtype=float), np.asarray(scores_b, dtype=float)
+    if a.shape != b.shape:
+        raise ValueError("Paired scores must have the same shape and fold order.")
+    result = corrected_paired_comparison(a - b, test_train_ratio)
+    result["mean_difference"] = result.pop("mean_difference_knn_minus_median")
+    return result
+
+
 def build_scorers(metrics: list) -> dict:
     """Build the reported scorers; binary metrics use class 1 and zero_division=0."""
     scorers = {}

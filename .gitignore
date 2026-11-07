@@ -4,11 +4,18 @@ __pycache__/
 .DS_Store
 .ipynb_checkpoints/
 *.egg-info/
+notebooks/**/runs_demo.csv
+
+# Keep submission evidence, but not local legacy archives or smoke checks.
 results/*
-# Keep the evidence referenced by the Week 6 submission.
-!results/week6_comparison/
-!results/feature_engineering/
-!results/adaboost_logistic_regression/
-!results/week7/
 !results/runs.csv
+!results/README.md
+!results/week6/
+results/week6/*
+!results/week6/ensembles/
+!results/week6/feature_engineering/
+!results/week6/boosted_lr/
+!results/week7/
+!results/week8/
 results/week7/smoke/
+results/week8/smoke/

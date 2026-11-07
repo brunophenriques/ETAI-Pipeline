@@ -132,6 +132,8 @@ def nested_cross_validate(
                           else best_pipeline.predict(X_val))
         extra_scores = ({name: float(metric(best_pipeline, X_val, y_val))
                          for name, metric in scorers.items()} if scorers is not None else {})
+        if "select" in best_pipeline.named_steps:
+            extra_scores["n_features_kept"] = int(best_pipeline.named_steps["select"].get_support().sum())
         rows.append({
             "fold": fold,
             "train": train_score,

@@ -1,0 +1,13 @@
+{
+  "corrected_standard_error": 0.0016988953366610523,
+  "degrees_of_freedom": 4,
+  "two_sided_p_value": 0.28717956835396796,
+  "ci95": [
+    -0.0068010446485369785,
+    0.0026327346348948935
+  ],
+  "mean_difference": -0.0020841550068210423,
+  "contrast": "selection_on_minus_off",
+  "validation_train_ratio": 0.2500000093843527,
+  "paired_outer_folds": 5
+}

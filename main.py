@@ -3,6 +3,7 @@ import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pandas as pd
 import yaml
@@ -15,7 +16,7 @@ from src.preprocess import preprocess
 from src.model import build_pipeline
 from src.evaluate import (build_scorers, cross_validate_pipeline, cv_report,
                           fairness_report, oof_classification_report)
-from src.results import save_run, save_scores
+from src.results import run_directory, save_run, save_scores
 from src.tuning import nested_cross_validate, tune_pipeline, tuning_report
 
 
@@ -24,8 +25,7 @@ def load_config(path: str = "config.yaml") -> dict:
         return yaml.safe_load(file)
 
 
-@threadpool_limits.wrap(limits=1)
-def main():
+def _run(cache_dir):
     config = load_config()
     config["run_id"] = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     model_type = config["model"]["type"]
@@ -37,9 +37,13 @@ def main():
         raise ValueError("selection_metric must be included in cv.metrics.")
     tuning = config.get("tuning", {})
     enabled = tuning.get("enabled", False)
-    space = tuning.get("search_spaces", {}).get(model_type)
+    space = dict(tuning.get("search_spaces", {}).get(model_type) or {})
     if enabled and not space:
         raise ValueError(f"No tuning search space configured for {model_type}; disable tuning for dummy.")
+    selection_config = config.get("feature_selection", {})
+    selection_enabled = selection_config.get("enabled", False)
+    if enabled and selection_enabled:
+        space.update(selection_config.get("search_space", {}))
 
     raw = load_data(config["data"]["path"])
     X_dev, X_test, y_dev, y_test, extras_dev, extras_test, preprocessor = preprocess(
@@ -53,7 +57,7 @@ def main():
     # Materialized once: baseline, floor and nested evaluation share validation rows.
     folds = list(cv.split(X_dev, y_dev))
     n_jobs = cv_config.get("n_jobs", 1)
-    model = build_pipeline(preprocessor, config["model"])
+    model = build_pipeline(preprocessor, config["model"], selection_config, memory=cache_dir)
     floor_pipeline = build_pipeline(clone(preprocessor), {"type": "dummy", "params": {"strategy": "prior"}})
     print(f"Model: {model_type}; selection: {selection}; development rows: {len(X_dev)}", flush=True)
     floor_scores, _ = cross_validate_pipeline(
@@ -84,11 +88,23 @@ def main():
     report += "\n\n" + fairness_report(y_dev, proba, extras_dev,
         sensitive_attr=config["data"]["sensitive_attr"], context=context, probabilities=True)
     model.fit(X_dev, y_dev)
+    names = model.named_steps["preprocessing"].get_feature_names_out()
+    selector = model.named_steps.get("select")
+    kept = selector.get_feature_names_out(names) if selector is not None else names
+    kept = kept.tolist()
+    feature_summary = f"Features kept: {len(kept)}/{len(names)}: {', '.join(kept)}"
+    report += "\n\n" + feature_summary
     report += (f"\n\nFinal pipeline refit on {len(X_dev)} development rows.\n"
                f"Reserved test set: {len(X_test)} rows (not evaluated).\n")
-    results_dir = config.get("output", {}).get("results_dir", "results/week7")
+    results_dir = run_directory(config.get("output", {}), model_type, selection_enabled)
     Path(results_dir).mkdir(parents=True, exist_ok=True)
     stem = Path(results_dir) / f"{model_type}_{config['run_id']}"
+    Path(str(stem) + "_features.json").write_text(json.dumps({
+        "feature_selection": selection_enabled,
+        "min_votes": selector.min_votes if selector is not None else None,
+        "input_features": names.tolist(), "kept_features": kept,
+        "votes": selector.votes_.tolist() if selector is not None else None,
+    }, indent=2), encoding="utf-8")
     baseline.to_csv(str(stem) + "_default_folds.csv", index=False)
     if enabled:
         final_scores.to_csv(str(stem) + "_nested_folds.csv", index=False)
@@ -117,7 +133,11 @@ def main():
                best_trial=float(study.best_value) if study else None,
                params=json.dumps(config["model"].get("params", {}), sort_keys=True),
                tuned_params=json.dumps(study.best_params, sort_keys=True) if study else "",
-               report=str(stem) + ".txt", test_evaluated=False)
+               report=str(stem) + ".txt", test_evaluated=False,
+               feature_selection=selection_enabled,
+               selection_min_votes=selector.min_votes if selector is not None else None,
+               n_features_before=len(names), n_features_kept=len(kept),
+               kept_features=json.dumps(kept))
     for metric in metrics:
         row[f"{metric}_mean"] = float(final_scores[metric].mean())
         row[f"{metric}_std"] = float(final_scores[metric].std(ddof=1))
@@ -130,9 +150,18 @@ def main():
     board = board[board["comparison_id"] == comparison_id].sort_values("mean", ascending=False)
     print(report)
     print("\nScoreboard (same data, features, folds and selection metric):")
-    print(board[["model", "tuned", "untuned", "mean", "std", "floor"]].to_string(index=False))
+    print(board[["model", "tuned", "feature_selection", "untuned", "mean", "std", "floor"]].to_string(index=False))
     print(f"Full results saved to {path}")
+    print(feature_summary)
     return row
+
+
+@threadpool_limits.wrap(limits=1)
+def main():
+    # This context owns a fresh OS temporary directory; only its own cache is
+    # removed on success or failure. Joblib keys fits by parameters and X/y.
+    with TemporaryDirectory(prefix="etai_pipeline_cache_") as cache_dir:
+        return _run(cache_dir)
 
 
 if __name__ == "__main__":

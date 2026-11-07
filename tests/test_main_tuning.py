@@ -3,6 +3,7 @@
 import copy
 import io
 import unittest
+from tempfile import TemporaryDirectory
 from contextlib import redirect_stdout
 from unittest.mock import patch
 
@@ -35,6 +36,7 @@ class MainTuningTests(unittest.TestCase):
                     config["model"] = {
                         "type": "decision_tree", "params": {"random_state": 42}
                     }
+                    config["feature_selection"] = {"enabled": False}
                     config["cv"].update(n_splits=3, n_jobs=1, scoring="balanced_accuracy")
                     config["cv"]["selection_metric"] = "balanced_accuracy"
                     config["tuning"].update(enabled=enabled, n_trials=2, n_splits=2)
@@ -50,8 +52,10 @@ class MainTuningTests(unittest.TestCase):
                         patch("main.cross_validate_pipeline", wraps=main.cross_validate_pipeline) as ordinary,
                         patch("main.tune_pipeline", wraps=main.tune_pipeline) as final_search,
                         patch("main.build_pipeline", wraps=main.build_pipeline) as build,
+                        TemporaryDirectory() as output_dir,
                         redirect_stdout(io.StringIO()),
                     ):
+                        config["output"]["results_dir"] = output_dir
                         main.main()
 
                     report = save.call_args.args[2]

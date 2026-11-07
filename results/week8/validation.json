@@ -1,0 +1,10 @@
+{
+  "paired_outer_folds_checked": 10,
+  "development_rows_per_condition": 5771,
+  "matching_row_indices_and_targets": true,
+  "trials_per_study": 15,
+  "reserved_test_evaluated": false,
+  "corrected_test_recomputed": true,
+  "selection_on_final_columns": 3,
+  "selection_off_final_columns": 14
+}

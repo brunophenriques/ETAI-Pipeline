@@ -2,6 +2,34 @@
 
 # 20231608 Bruno Henriques
 
+## Project structure
+
+```text
+ETAI-Pipeline/
+  main.py                 # Normal pipeline entry point
+  config.yaml             # Data, preprocessing, model, CV and tuning settings
+  requirements.txt
+  src/                    # Reusable pipeline code
+  scripts/                # Reproducible experiment runners
+  tests/                  # Automated checks
+  data/                   # Dataset and data notes
+  notebooks/              # Lecture notebooks grouped by week
+    week3/ ... week8/
+    shared/prerun/        # Shared course pre-run tables
+  results/
+    runs.csv              # Append-only scoreboard
+    week6/                # Ensembles, feature engineering and boosted LR
+    week7/                # One folder per model, plus metadata/
+    week8/                # selection_on/, selection_off/ and comparison files
+  docs/archive/           # Older notes and the path migration record
+```
+
+Run commands from the repository root. The standard entry point remains `python main.py`.
+Experiment commands now use `python -m scripts.<runner>`; see the [scripts guide](scripts/README.md).
+The [results guide](results/README.md) explains the output folders, and the
+[notebook index](notebooks/README.md) lists the weekly material. Older local reports
+from Weeks 2-5 are preserved in matching `results/weekN/` folders but remain ignored by Git.
+
 ### WEEKLY CHALLENGES
 
 **Week 2**:
@@ -72,6 +100,7 @@ These findings were documented in `notebooks/week3/01_eda_introduction.ipynb`. D
 | 5 | Added Optuna tuning and nested cross-validation, then tuned Logistic Regression and Random Forest and compared them with the tuned Decision Tree. |
 | 6 | Added AdaBoost and a projection-based oblique forest, compared the model families with 50-trial nested tuning, tested three engineered features, and compared boosted LR with plain LR. The final test set stayed aside. |
 | 7 | Added Gradient Boosting, HistGradientBoosting and Naive Bayes, eight evaluation metrics, OOF probabilities and confusion matrices, and a ROC-AUC scoreboard with untuned and nested results. |
+| 8 | Added XGBoost and fold-local voting feature selection with a temporary cache, tuned selection jointly with the model, and compared selection on/off with a corrected paired test. |
 
 __________
 
@@ -105,10 +134,10 @@ The paired comparison corrects for the fact that the CV folds share training dat
 The comparison can be repeated with:
 
 ```bash
-python compare_imputation.py
+python -m scripts.compare_imputation
 ```
 
-The full results are saved in `results/imputation_comparison/`, including the scores for each fold and holdout, the settings used, and the paired comparison. This folder is ignored by Git, so the script generates the files locally and the main results are kept in the table above.
+The full results are saved in `results/week4/imputation_comparison/`, including the scores for each fold and holdout, the settings used, and the paired comparison. This folder is ignored by Git, so the script generates the files locally and the main results are kept in the table above.
 
 To try KNN in the normal pipeline, change `numerical_imputation` to `"knn"` in config.yaml, keep `scaler` as `"standard"` or `"robust"`, and choose `n_neighbors`. Then run `python main.py`. The current configuration uses median with standard scaling.
 
@@ -174,7 +203,7 @@ The fairness comparison also uses nested OOF predictions. For African-American d
 
 The nested scores evaluate the tuning procedure, which can select different parameters in each outer fold. After that evaluation, I ran a separate search on all 5,771 development rows and refitted each final winner on those rows. The 1,443 reserved test cases were not evaluated this week, although this test set had already been used in earlier weeks.
 
-The reports are saved locally as results/optuna42.txt, results/optuna_lr42.txt and results/optuna_rf42.txt. The two main challenges are complete. The optional tasks of tuning preprocessing and repeating the experiments with balanced accuracy or F1 are still to do.
+The reports are saved locally as results/week5/optuna42.txt, results/week5/optuna_lr42.txt and results/week5/optuna_rf42.txt. The two main challenges are complete. The optional tasks of tuning preprocessing and repeating the experiments with balanced accuracy or F1 are still to do.
 
 #### have a nice weekend!
 
@@ -194,12 +223,12 @@ For the tuned column, every model used 50 trials per study, 5 inner folds and th
 
 | Model | Default: CV mean ± std (gap) | Tuned: nested CV mean ± std (gap) | Tuning score (best trial) | Chosen hyperparameters |
 |---|---|---|---|---|
-| Logistic regression | [0.670 ± 0.017 (+0.002)](results/week6_comparison/logistic_regression_default_cv_seed42.txt) | [0.670 ± 0.014 (+0.004)](results/week6_comparison/logistic_regression_tuned_50trials_seed42.txt) | 0.674 | `C=0.01533` |
-| Decision tree | [0.627 ± 0.016 (+0.175)](results/week6_comparison/decision_tree_default_cv_seed42.txt) | [0.678 ± 0.011 (+0.008)](results/week6_comparison/decision_tree_tuned_50trials_seed42.txt) | 0.680 | `max_depth=5`, `min_samples_leaf=1`, `criterion=entropy` |
-| Random forest | [0.631 ± 0.015 (+0.170)](results/week6_comparison/random_forest_default_cv_seed42.txt) | [0.676 ± 0.013 (+0.014)](results/week6_comparison/random_forest_tuned_50trials_seed42.txt) | 0.684 | `n_estimators=102`, `max_depth=None`, `min_samples_leaf=60`, `max_features=sqrt` |
-| Oblique random forest | [0.637 ± 0.011 (+0.164)](results/week6_comparison/oblique_random_forest_default_cv_seed42.txt) | [0.681 ± 0.012 (+0.009)](results/week6_comparison/oblique_random_forest_tuned_50trials_seed42.txt) | 0.683 | `tree.max_depth=10`, `tree.min_samples_leaf=22`, `project.n_components=7` (100 trees) |
-| AdaBoost | [0.668 ± 0.013 (+0.003)](results/week6_comparison/adaboost_default_cv_seed42.txt) | [0.680 ± 0.016 (+0.008)](results/week6_comparison/adaboost_tuned_50trials_seed42.txt) | 0.686 | `estimator.max_depth=6`, `n_estimators=301`, `learning_rate=0.01324` |
-| Dummy (most frequent, reference) | [0.549 ± 0.000 (-0.000)](results/week6_comparison/dummy_default_cv_seed42.txt) | — | — | No tuning |
+| Logistic regression | [0.670 ± 0.017 (+0.002)](results/week6/ensembles/logistic_regression_default_cv_seed42.txt) | [0.670 ± 0.014 (+0.004)](results/week6/ensembles/logistic_regression_tuned_50trials_seed42.txt) | 0.674 | `C=0.01533` |
+| Decision tree | [0.627 ± 0.016 (+0.175)](results/week6/ensembles/decision_tree_default_cv_seed42.txt) | [0.678 ± 0.011 (+0.008)](results/week6/ensembles/decision_tree_tuned_50trials_seed42.txt) | 0.680 | `max_depth=5`, `min_samples_leaf=1`, `criterion=entropy` |
+| Random forest | [0.631 ± 0.015 (+0.170)](results/week6/ensembles/random_forest_default_cv_seed42.txt) | [0.676 ± 0.013 (+0.014)](results/week6/ensembles/random_forest_tuned_50trials_seed42.txt) | 0.684 | `n_estimators=102`, `max_depth=None`, `min_samples_leaf=60`, `max_features=sqrt` |
+| Oblique random forest | [0.637 ± 0.011 (+0.164)](results/week6/ensembles/oblique_random_forest_default_cv_seed42.txt) | [0.681 ± 0.012 (+0.009)](results/week6/ensembles/oblique_random_forest_tuned_50trials_seed42.txt) | 0.683 | `tree.max_depth=10`, `tree.min_samples_leaf=22`, `project.n_components=7` (100 trees) |
+| AdaBoost | [0.668 ± 0.013 (+0.003)](results/week6/ensembles/adaboost_default_cv_seed42.txt) | [0.680 ± 0.016 (+0.008)](results/week6/ensembles/adaboost_tuned_50trials_seed42.txt) | 0.686 | `estimator.max_depth=6`, `n_estimators=301`, `learning_rate=0.01324` |
+| Dummy (most frequent, reference) | [0.549 ± 0.000 (-0.000)](results/week6/ensembles/dummy_default_cv_seed42.txt) | — | — | No tuning |
 
 The gap is mean training score minus validation score, and std is the sample standard deviation across the five folds. The DT tuning still fixes min_samples_split: 10, as in Week 5; its default baseline uses the library default of 2. This week's default DT therefore differs from the restricted tree reported as my best model in Week 4. The new RF default also uses the library default of 100 trees, whereas the Week 4 forest used 300.
 
@@ -209,15 +238,15 @@ I used the planned 50-trial runs for this table even where an earlier 5- or 15-t
 
 ### Reproducing and keeping the results
 
-The full reports are in results/week6_comparison/, named by model, default or tuned mode, trial count and seed. The new runs also have JSON files with their exact configurations, and summary.csv / summary.json collect the values shown above. The existing AdaBoost and oblique reports were copied into this folder without deleting the originals; existing_run_sources.json records their original paths. The selected Week 6 reports are included in Git so the table links can be opened on GitHub; other generated results remain ignored.
+The full reports are in results/week6/ensembles/, named by model, default or tuned mode, trial count and seed. The new runs also have JSON files with their exact configurations, and summary.csv / summary.json collect the values shown above. The existing AdaBoost and oblique reports were copied into this folder without deleting the originals; existing_run_sources.json records their original paths. The selected Week 6 reports are included in Git so the table links can be opened on GitHub; other generated results remain ignored.
 
 I added a comparison runner that calls the same main.main() workflow with temporary configuration overrides, leaving config.yaml unchanged:
 
 ```bash
-python run_week6_comparison.py
+python -m scripts.run_week6_comparison
 ```
 
-It skips reports already present in results/week6_comparison/. To repeat the experiments from scratch, keep the existing folder as an archive and use an empty results/week6_comparison/ folder. For a single model, set its model.type and params in config.yaml and run python main.py; tuning.enabled: false produces the default CV comparison and true runs nested tuning.
+It skips reports already present in results/week6/ensembles/. To repeat the experiments from scratch, keep the existing folder as an archive and use an empty results/week6/ensembles/ folder. For a single model, set its model.type and params in config.yaml and run python main.py; tuning.enabled: false produces the default CV comparison and true runs nested tuning.
 
 ### Challenge 1: Feature engineering
 
@@ -235,9 +264,9 @@ I compared the three features together against the no-feature runs above for LR,
 
 | Model | Without features: nested CV mean ± std (gap) | With features: nested CV mean ± std (gap) | Accuracy difference (with minus without) |
 |---|---|---|---|
-| Logistic regression | [0.670 ± 0.014 (+0.004)](results/feature_engineering/without_features/logistic_regression_tuned_50trials_seed42.txt) | [0.674 ± 0.013 (+0.003)](results/feature_engineering/with_features/logistic_regression_tuned_50trials_seed42.txt) | +0.004 |
-| AdaBoost | [0.680 ± 0.016 (+0.008)](results/feature_engineering/without_features/adaboost_tuned_50trials_seed42.txt) | [0.678 ± 0.015 (+0.009)](results/feature_engineering/with_features/adaboost_tuned_50trials_seed42.txt) | -0.002 |
-| Random forest | [0.676 ± 0.013 (+0.014)](results/feature_engineering/without_features/random_forest_tuned_50trials_seed42.txt) | [0.676 ± 0.013 (+0.016)](results/feature_engineering/with_features/random_forest_tuned_50trials_seed42.txt) | +0.000 |
+| Logistic regression | [0.670 ± 0.014 (+0.004)](results/week6/feature_engineering/without_features/logistic_regression_tuned_50trials_seed42.txt) | [0.674 ± 0.013 (+0.003)](results/week6/feature_engineering/with_features/logistic_regression_tuned_50trials_seed42.txt) | +0.004 |
+| AdaBoost | [0.680 ± 0.016 (+0.008)](results/week6/feature_engineering/without_features/adaboost_tuned_50trials_seed42.txt) | [0.678 ± 0.015 (+0.009)](results/week6/feature_engineering/with_features/adaboost_tuned_50trials_seed42.txt) | -0.002 |
+| Random forest | [0.676 ± 0.013 (+0.014)](results/week6/feature_engineering/without_features/random_forest_tuned_50trials_seed42.txt) | [0.676 ± 0.013 (+0.016)](results/week6/feature_engineering/with_features/random_forest_tuned_50trials_seed42.txt) | +0.000 |
 
 The values and differences are displayed to three decimal places, so RF having the same displayed mean does not establish exact equality. The fold comparison CSV also uses the precision available in the saved reports.
 
@@ -246,10 +275,10 @@ The linear model had the only positive change in recorded mean accuracy, increas
 The feature switch is `preprocessing.engineered_features.enabled` in config.yaml, currently true for experimenting. To run the original features only, set it to false; run_week6_comparison.py explicitly disables it for the ensemble table above. To repeat this challenge comparison, run:
 
 ```bash
-python run_feature_comparison.py
+python -m scripts.run_feature_comparison
 ```
 
-Reports and exact configurations are saved locally under results/feature_engineering/with_features/ and the baseline copies under without_features/. The folder also contains summary.csv, summary.json, fold_comparison.csv and method.json. Existing completed reports are skipped, and the original baseline files are preserved. The final tuned pipelines were refitted on development rows only; the reserved test set was not evaluated.
+Reports and exact configurations are saved locally under results/week6/feature_engineering/with_features/ and the baseline copies under without_features/. The folder also contains summary.csv, summary.json, fold_comparison.csv and method.json. Existing completed reports are skipped, and the original baseline files are preserved. The final tuned pipelines were refitted on development rows only; the reserved test set was not evaluated.
 
 ### Challenge 2: Boosting Logistic Regression
 
@@ -264,9 +293,9 @@ The final search selected C = 0.0001062, 46 boosting rounds and learning_rate = 
 
 A weighted sum of raw linear scores is still linear: `sum(alpha_i * (w_i · x + b_i)) = W · x + B`. However, this scikit-learn AdaBoost implementation combines the learners' predicted classes through weighted votes, rather than adding their raw linear scores, so the resulting voting rule does not have to be a single linear boundary. The linearity statement applies to the inputs received by LR; with our ratio and interaction features, even a plain LR can already describe nonlinear relationships in the original inputs.
 
-The [full boosted LR report](results/adaboost_logistic_regression/adaboost_lr_seed42_50trials_features.txt) includes the outer-fold choices, classification and fairness reports, and final parameters. The final pipeline was refitted on all development rows, and the reserved test set remained unevaluated. Both the main feature-engineering challenge and this optional experiment are now complete.
+The [full boosted LR report](results/week6/boosted_lr/adaboost_lr_seed42_50trials_features.txt) includes the outer-fold choices, classification and fairness reports, and final parameters. The final pipeline was refitted on all development rows, and the reserved test set remained unevaluated. Both the main feature-engineering challenge and this optional experiment are now complete.
 
-The active config is currently set to adaboost_logistic_regression with features enabled and 50 trials. Running `python main.py` repeats that experiment and saves its report under results/adaboost_logistic_regression/.
+The active config is currently set to adaboost_logistic_regression with features enabled and 50 trials. Running `python main.py` repeats that experiment and saves its report under results/week6/boosted_lr/.
 
 #### have a nice weekend!
 
@@ -290,16 +319,16 @@ The source is [results/runs.csv](results/runs.csv), with one completed run per m
 
 | Model | Untuned ROC-AUC mean ± std (gap) | Tuned nested ROC-AUC mean ± std (gap) | Dummy floor | Best final tuning score |
 |---|---|---|---|---|
-| [Dummy (prior)](results/week7/dummy_20261024_221211_485737.txt) | 0.5000 ± 0.0000 (+0.0000) | — | 0.5000 | — |
-| [Logistic regression](results/week7/logistic_regression_20261024_221223_089263.txt) | 0.7223 ± 0.0156 (+0.0030) | 0.7222 ± 0.0134 (+0.0026) | 0.5000 | 0.7232 |
-| [Gaussian Naive Bayes](results/week7/naive_bayes_20261024_221236_258435.txt) | 0.6996 ± 0.0137 (+0.0010) | 0.7001 ± 0.0137 (+0.0008) | 0.5000 | 0.7001 |
-| [Decision tree](results/week7/decision_tree_20261024_221246_769637.txt) | 0.6320 ± 0.0096 (+0.2709) | 0.7167 ± 0.0107 (+0.0167) | 0.5000 | 0.7160 |
-| [Random forest](results/week7/random_forest_20261024_221443_766044.txt) | 0.6651 ± 0.0137 (+0.2297) | 0.7265 ± 0.0129 (+0.0156) | 0.5000 | 0.7277 |
-| [Oblique random forest](results/week7/oblique_random_forest_20261024_221729_817984.txt) | 0.6697 ± 0.0122 (+0.2251) | 0.7257 ± 0.0127 (+0.0207) | 0.5000 | 0.7274 |
-| [AdaBoost (trees)](results/week7/adaboost_20261024_221919_983122.txt) | 0.7183 ± 0.0168 (+0.0086) | 0.7257 ± 0.0113 (+0.0135) | 0.5000 | 0.7265 |
-| [Gradient Boosting](results/week7/gradient_boosting_20261024_221331_064059.txt) | 0.7237 ± 0.0144 (+0.0359) | 0.7258 ± 0.0128 (+0.0117) | 0.5000 | 0.7276 |
-| [HistGradientBoosting](results/week7/hist_gradient_boosting_20261024_221256_638212.txt) | 0.7063 ± 0.0189 (+0.1016) | 0.7244 ± 0.0140 (+0.0160) | 0.5000 | 0.7261 |
-| [AdaBoost (Logistic Regression)](results/week7/adaboost_logistic_regression_20261024_222140_559867.txt) | 0.6965 ± 0.0183 (+0.0046) | 0.7177 ± 0.0112 (+0.0024) | 0.5000 | 0.7197 |
+| [Dummy (prior)](results/week7/dummy/dummy_20261024_221211_485737.txt) | 0.5000 ± 0.0000 (+0.0000) | — | 0.5000 | — |
+| [Logistic regression](results/week7/logistic_regression/logistic_regression_20261024_221223_089263.txt) | 0.7223 ± 0.0156 (+0.0030) | 0.7222 ± 0.0134 (+0.0026) | 0.5000 | 0.7232 |
+| [Gaussian Naive Bayes](results/week7/naive_bayes/naive_bayes_20261024_221236_258435.txt) | 0.6996 ± 0.0137 (+0.0010) | 0.7001 ± 0.0137 (+0.0008) | 0.5000 | 0.7001 |
+| [Decision tree](results/week7/decision_tree/decision_tree_20261024_221246_769637.txt) | 0.6320 ± 0.0096 (+0.2709) | 0.7167 ± 0.0107 (+0.0167) | 0.5000 | 0.7160 |
+| [Random forest](results/week7/random_forest/random_forest_20261024_221443_766044.txt) | 0.6651 ± 0.0137 (+0.2297) | 0.7265 ± 0.0129 (+0.0156) | 0.5000 | 0.7277 |
+| [Oblique random forest](results/week7/oblique_random_forest/oblique_random_forest_20261024_221729_817984.txt) | 0.6697 ± 0.0122 (+0.2251) | 0.7257 ± 0.0127 (+0.0207) | 0.5000 | 0.7274 |
+| [AdaBoost (trees)](results/week7/adaboost/adaboost_20261024_221919_983122.txt) | 0.7183 ± 0.0168 (+0.0086) | 0.7257 ± 0.0113 (+0.0135) | 0.5000 | 0.7265 |
+| [Gradient Boosting](results/week7/gradient_boosting/gradient_boosting_20261024_221331_064059.txt) | 0.7237 ± 0.0144 (+0.0359) | 0.7258 ± 0.0128 (+0.0117) | 0.5000 | 0.7276 |
+| [HistGradientBoosting](results/week7/hist_gradient_boosting/hist_gradient_boosting_20261024_221256_638212.txt) | 0.7063 ± 0.0189 (+0.1016) | 0.7244 ± 0.0140 (+0.0160) | 0.5000 | 0.7261 |
+| [AdaBoost (Logistic Regression)](results/week7/adaboost_logistic_regression/adaboost_logistic_regression_20261024_222140_559867.txt) | 0.6965 ± 0.0183 (+0.0046) | 0.7177 ± 0.0112 (+0.0024) | 0.5000 | 0.7197 |
 
 The gap is training ROC-AUC minus validation ROC-AUC, and std is the sample standard deviation across the five outer folds. The no-model floor is a DummyClassifier(strategy="prior") pipeline evaluated on exactly the same folds. Its constant within-fold score gives ROC-AUC 0.5000. Best final tuning scores are selection scores, not the numbers I use to rank the tuned procedures.
 
@@ -322,9 +351,89 @@ python main.py
 Use tuning.enabled: false for an untuned-only check, and true for nested tuning when the model has a search space. To reproduce or resume the complete comparison with the fixed 15-trial budget:
 
 ```bash
-python run_week7.py
+python -m scripts.run_week7
 ```
 
 The runner skips completed models whose reports are already present. Use five trials while testing implementation changes; the results in this table are the completed 15-trial runs. No final test performance is reported because that set remains reserved.
+
+#### have a nice weekend!
+
+__________
+
+**Week 8**:
+
+This week, I added XGBoost and feature selection to my own pipeline. I kept cleaning.py and preprocess.py separate, the Week 6 engineered features enabled, and the Week 7 ROC-AUC selection metric and eight reported metrics. The reserved split is still 20% with seed 42; all model comparisons below use only the same 5,771 development rows.
+
+### XGBoost and selection inside the pipeline
+
+I added XGBClassifier to the model registry and xgboost>=2.0 to requirements.txt. The search covers n_estimators, learning_rate, max_depth, min_child_weight, gamma, reg_alpha, reg_lambda, subsample and colsample_bytree. Each forest/booster uses one worker while CV parallelizes folds. I tune the number of trees with CV and do not use the outer validation labels or reserved test labels for early stopping.
+
+The pipeline is now preprocessing -> select -> classifier when feature_selection.enabled is true. VoteSelector fits a 200-tree Random Forest with min_samples_leaf: 20, Gradient Boosting, and L1 Logistic Regression with C: 0.01 and solver: liblinear. The tree models vote for columns above their own mean importance, and LR votes for nonzero coefficients. It operates on the encoded and scaled columns, and keeps a column when it receives at least min_votes votes.
+
+The selector is cloned and fitted inside every training fold, including every inner tuning fold. With selection enabled, select__min_votes (1 to 3) joins the XGBoost search space. Each main.py run owns a fresh temporary Pipeline cache; fits are reused only for matching training data, labels and settings, and the cache is removed on success or failure. Tests checked that changing only the classifier reuses the selector, while changing training rows or labels refits it.
+
+### Feature selection comparison
+
+Both conditions used 15 trials per search, five stratified inner folds and five stratified outer folds, all seeded with 42, and the same XGBoost search ranges. Selection was the only recipe switch; it also added min_votes to that condition's tuning problem. Both completed runs were appended to [results/runs.csv](results/runs.csv), which now records the selection setting and final kept-column count. The untuned XGBoost integration check was saved separately under results/week8/smoke/, outside this comparison.
+
+| XGBoost recipe | Untuned ROC-AUC | Tuned nested ROC-AUC (mean ± std) | Mean train-validation gap | Best final trial | Final columns kept |
+
+|---|---|---|---|---|---|
+
+| [Without selection](results/week8/selection_off/xgboost_20261107_204126_784752.txt) | 0.6958 | 0.7266 ± 0.0128 | +0.0117 | 0.7277 | 14/14 |
+
+| [With voting selection](results/week8/selection_on/xgboost_20261107_204302_497378.txt) | 0.7019 | 0.7245 ± 0.0121 | +0.0097 | 0.7267 | 3/14 |
+
+The final selected pipeline kept min_votes: 2 and these three columns after its separate final development-set search:
+
+- `numerical__priors_count` (2 votes)
+
+- `numerical__age` (3 votes)
+
+- `numerical__priors_per_adult_year` (3 votes)
+
+These are the final refit's columns, not a list selected once before evaluating the outer folds. The full input list, votes and retained names are saved in the selected run's _features.json file. Without selection, all 14 transformed columns are used.
+
+### Corrected paired test
+
+I compared the five paired outer-fold ROC-AUC scores, with the difference defined as selection on minus selection off. The approximate Nadeau-Bengio correction uses `SE = sqrt((1/n_folds + n_validation/n_train) * sample_variance(paired_differences))`, a two-sided t test with four degrees of freedom and the actual mean outer validation/training ratio of about 0.25. This accounts approximately for the overlap in training rows, rather than treating the fold results as independent.
+
+- Mean difference: **-0.002084 ROC-AUC**.
+
+- Corrected standard error: **0.001699**.
+
+- 95% confidence interval: **[-0.006801, +0.002633]**.
+
+- Two-sided p-value: **0.2872**.
+
+The exact paired scores are in [paired_fold_scores.csv](results/week8/paired_fold_scores.csv), and the calculation is saved in [corrected_paired_test.json](results/week8/corrected_paired_test.json).
+
+The selected model reduced the input from 14 to 3 columns, while nested ROC-AUC fell from 0.7266 to 0.7245. The corrected test did not detect a clear difference (p = 0.2872), but its interval includes both a loss and a gain, so it does not prove that the smaller pipeline is equivalent. For now, I would keep selection on as a more interpretable candidate because it removes 11 columns for a small observed mean loss of about 0.0021, while retaining the no-selection run as my higher-scoring reference. Selection was not faster end to end in this run (about 134 seconds versus 96 seconds), because fitting the three voters still adds work even with caching. I would report its nested ROC-AUC of **0.7245 ± 0.0121**, together with that uncertainty and the no-selection reference, rather than the best tuning score.
+
+### Votes across folds (B2 observation)
+
+The five outer folds chose min_votes values **[1, 1, 1, 2, 1]**, keeping **[4, 5, 4, 3, 4]** columns respectively. The final development-set search chose 2. This shows that the cutoff is not stable across training subsets, so I should not present 2 as a universally best threshold or apply its final feature list retroactively to the outer evaluations.
+
+### Reproducing the experiments
+
+```bash
+
+python -m pip install -r requirements.txt
+
+python main.py
+
+```
+
+The active configuration uses XGBoost, voting selection, ROC-AUC and 15 trials. Set tuning.enabled: false for an untuned check, or feature_selection.enabled: false to omit the learned selection step. To reproduce or resume the paired comparison:
+
+```bash
+
+python -m scripts.run_week8
+
+```
+
+The full reports, configurations, feature names/votes, Optuna trials, per-fold metrics, OOF probabilities and experiment settings are kept in results/week8/. The report header records the selection settings and the terminal output ends with Features kept. I added the generic corrected_paired_test() without changing the old imputation comparison's correction. The earlier Week 6 and Week 7 runners explicitly disable selection so that their original recipes stay reproducible.
+
+The final pipeline in each condition was refitted on development rows only. The 1,443 reserved test rows were not evaluated. Part A and the README task are complete; B1 (comparing other selector methods) remains optional and has not been run.
 
 #### have a nice weekend!

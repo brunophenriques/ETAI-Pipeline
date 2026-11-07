@@ -1,0 +1,4 @@
+{
+  "adaboost": "results/week6/archive/adaboost_seed42_50trials.txt",
+  "oblique_random_forest": "results/week6/archive/run_20261017_215055.txt"
+}

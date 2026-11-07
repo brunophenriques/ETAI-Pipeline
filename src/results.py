@@ -9,6 +9,19 @@ from pathlib import Path
 import pandas as pd
 
 
+def run_directory(output: dict, model_type: str, selection_enabled: bool) -> Path:
+    """Keep generated runs grouped while retaining flat historical runners."""
+    root = Path(output.get("results_dir", "results/week8"))
+    layout = output.get("layout", "flat")
+    if layout == "model":
+        return root / model_type
+    if layout == "selection":
+        return root / ("selection_on" if selection_enabled else "selection_off")
+    if layout != "flat":
+        raise ValueError("output.layout must be flat, model or selection.")
+    return root
+
+
 def save_run(results_dir: str, config: dict, report_text: str) -> str:
     """
     Writes one run's full report to a timestamped .txt file inside
@@ -27,6 +40,7 @@ def save_run(results_dir: str, config: dict, report_text: str) -> str:
         f"random_state: {config['split']['random_state']}\n"
         f"CV settings: {config.get('cv', {})}\n"
         f"Preprocessing settings: {config.get('preprocessing', {})}\n"
+        f"Feature selection settings: {config.get('feature_selection', {'enabled': False})}\n"
         f"Tuning settings: {config.get('tuning', {})}\n"
         + "=" * 60 + "\n\n"
     )

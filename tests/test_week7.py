@@ -15,11 +15,21 @@ from threadpoolctl import threadpool_limits
 from src.evaluate import build_scorers, cross_validate_pipeline, oof_classification_report
 from src.model import build_pipeline
 from src.preprocess import build_feature_preprocessor
-from src.results import save_scores
+from src.results import run_directory, save_scores
 from src.tuning import nested_cross_validate
 
 
 class Week7Tests(unittest.TestCase):
+    def test_results_layout_keeps_runs_grouped(self):
+        self.assertEqual(run_directory({"results_dir": "results/week8", "layout": "selection"},
+                                       "xgboost", True), Path("results/week8/selection_on"))
+        self.assertEqual(run_directory({"results_dir": "results/week7", "layout": "model"},
+                                       "naive_bayes", False), Path("results/week7/naive_bayes"))
+        self.assertEqual(run_directory({"results_dir": "results/week6/ensembles"},
+                                       "dummy", False), Path("results/week6/ensembles"))
+        with self.assertRaises(ValueError):
+            run_directory({"layout": "unknown"}, "dummy", False)
+
     def setUp(self):
         X, y = make_classification(n_samples=48, n_features=4, n_informative=3,
                                   n_redundant=0, flip_y=.1, random_state=42)
