@@ -12,11 +12,40 @@ from sklearn.utils.validation import check_is_fitted
 from threadpoolctl import threadpool_limits
 
 from src.evaluate import build_scorers, corrected_paired_test, cross_validate_pipeline
-from src.model import VoteSelector, build_pipeline
+from src.model import VoteSelector, build_pipeline, build_selector, selection_search_space
 from src.preprocess import build_feature_preprocessor
 
 
 class FeatureSelectionTests(unittest.TestCase):
+    def test_selector_factory_and_method_specific_spaces(self):
+        spaces = {
+            "vote": {"select__min_votes": {"type": "int", "low": 1, "high": 3}},
+            "kbest": {"select__k": {"type": "int", "low": 1, "high": 6}},
+            "from_model": {"select__threshold": {"type": "categorical", "choices": ["mean", "median"]}},
+        }
+        for method in spaces:
+            with self.subTest(method=method), threadpool_limits(limits=1):
+                config = {"enabled": True, "method": method, "min_votes": 1,
+                          "k": 3, "random_state": 42, "search_spaces": spaces}
+                model = build_pipeline(
+                    build_feature_preprocessor(self.X, {"scaler": "standard"}),
+                    {"type": "logistic_regression", "params": {}}, config,
+                )
+                self.assertEqual(selection_search_space(config), spaces[method])
+                self.assertTrue(set(spaces[method]).issubset(model.get_params(deep=True)))
+                fitted = clone(model).fit(self.X, self.y)
+                selector = fitted.named_steps["select"]
+                names = fitted.named_steps["preprocessing"].get_feature_names_out()
+                self.assertGreater(selector.get_support().sum(), 0)
+                self.assertEqual(len(selector.get_feature_names_out(names)), selector.get_support().sum())
+                self.assertFalse(hasattr(model.named_steps["select"], "n_features_in_"))
+                self.assertEqual(len(fitted.predict(self.X)), len(self.X))
+                if method == "kbest":
+                    self.assertEqual(selector.get_support().sum(), 3)
+        self.assertEqual(selection_search_space({"enabled": True, "search_space": spaces["vote"]}), spaces["vote"])
+        with self.assertRaises(ValueError):
+            build_selector({"method": "unknown"})
+
     def setUp(self):
         X, y = make_classification(n_samples=90, n_features=6, n_informative=3,
                                   n_redundant=0, random_state=42)

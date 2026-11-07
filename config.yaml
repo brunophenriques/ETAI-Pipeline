@@ -141,10 +141,18 @@ cv:
 
 feature_selection:
   enabled: true
+  method: "kbest"  # vote | kbest | from_model; B1's fastest comparable candidate.
   min_votes: 2
+  k: 5  # Used by kbest; 14 encoded columns in the current recipe.
+  threshold: "mean"  # Used by from_model (Random Forest importances).
   random_state: 42
-  search_space:
-    select__min_votes: {type: int, low: 1, high: 3}
+  search_spaces:
+    vote:
+      select__min_votes: {type: int, low: 1, high: 3}
+    kbest:
+      select__k: {type: int, low: 1, high: 14}
+    from_model:
+      select__threshold: {type: categorical, choices: ["mean", "median", "0.5*mean"]}
 
 
 tuning:

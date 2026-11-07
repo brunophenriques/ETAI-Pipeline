@@ -1,0 +1,16 @@
+{
+  "methods": [
+    "vote",
+    "kbest",
+    "from_model"
+  ],
+  "paired_outer_folds_checked": 15,
+  "same_development_rows": true,
+  "same_seed_and_folds": true,
+  "trials_per_study": 15,
+  "method_specific_parameters_checked": true,
+  "paired_tests_recomputed": true,
+  "holm_adjustment_reported": true,
+  "reserved_test_evaluated": false,
+  "vote_reproduced_part_a_score": true
+}

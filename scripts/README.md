@@ -10,6 +10,7 @@ The normal single-model entry point remains `python main.py`.
 | Week 6: engineered features | `python -m scripts.run_feature_comparison` | `results/week6/feature_engineering/` |
 | Week 7: all models | `python -m scripts.run_week7` | `results/week7/<model>/`, `results/runs.csv` |
 | Week 8: voting selection | `python -m scripts.run_week8` | `results/week8/selection_on/`, `selection_off/` and comparison files |
+| Week 8 B1: compare selectors | `python -m scripts.run_selectors` | `results/week8/b1/<method>/` and paired tests |
 
 The weekly runners use in-memory configuration overrides and preserve config.yaml.
 Completed reports are reused when resuming. Their budgets remain specific to each

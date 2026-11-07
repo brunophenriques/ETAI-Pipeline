@@ -1,7 +1,7 @@
 """Model construction."""
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.feature_selection import SelectorMixin
+from sklearn.feature_selection import SelectFromModel, SelectKBest, SelectorMixin, f_classif
 from sklearn.utils.validation import check_is_fitted, validate_data
 from xgboost import XGBClassifier
 from sklearn.dummy import DummyClassifier
@@ -126,13 +126,39 @@ def build_model(model_config: dict):
     return _MODELS[model_type](**params)
 
 
+def build_selector(selection_config: dict):
+    """Construct a learned selector; all fitting is left to Pipeline.fit."""
+    method = selection_config.get("method", "vote")
+    seed = selection_config.get("random_state")
+    if method == "vote":
+        return VoteSelector(min_votes=selection_config.get("min_votes", 2), random_state=seed)
+    if method == "kbest":
+        return SelectKBest(score_func=f_classif, k=selection_config.get("k", 5))
+    if method == "from_model":
+        return SelectFromModel(
+            RandomForestClassifier(n_estimators=200, min_samples_leaf=20,
+                                   random_state=seed, n_jobs=1),
+            threshold=selection_config.get("threshold", "mean"),
+        )
+    raise ValueError("feature_selection.method must be vote, kbest or from_model.")
+
+
+def selection_search_space(selection_config: dict) -> dict:
+    """Return only this method's tuning parameters; accept the earlier vote API."""
+    if not selection_config.get("enabled", False):
+        return {}
+    method = selection_config.get("method", "vote")
+    if method not in {"vote", "kbest", "from_model"}:
+        raise ValueError("Unknown feature selection method.")
+    if "search_spaces" in selection_config:
+        return dict(selection_config["search_spaces"].get(method, {}))
+    return dict(selection_config.get("search_space", {})) if method == "vote" else {}
+
+
 def build_pipeline(feature_preprocessor, model_config: dict, selection_config=None, memory=None) -> Pipeline:
     """Combine an unfitted feature preprocessor and classifier."""
     steps = [("preprocessing", feature_preprocessor)]
     if selection_config and selection_config.get("enabled", False):
-        steps.append(("select", VoteSelector(
-            min_votes=selection_config.get("min_votes", 2),
-            random_state=selection_config.get("random_state"),
-        )))
+        steps.append(("select", build_selector(selection_config)))
     steps.append(("classifier", build_model(model_config)))
     return Pipeline(steps, memory=memory)

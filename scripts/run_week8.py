@@ -19,6 +19,7 @@ import xgboost
 from sklearn.model_selection import StratifiedKFold
 
 import main
+from src.model import selection_search_space
 from src.evaluate import corrected_paired_test
 from src.tuning import tune_pipeline
 
@@ -28,6 +29,13 @@ FOLDER = Path("results/week8")
 
 def run():
     base = main.load_config()
+    # Preserve the required Part A vote experiment independently of B1 options.
+    settings = base["feature_selection"]
+    base["feature_selection"] = {
+        "enabled": True, "min_votes": settings.get("min_votes", 2),
+        "random_state": settings.get("random_state", 42),
+        "search_space": selection_search_space({**settings, "enabled": True, "method": "vote"}),
+    }
     base["model"] = {"type": "xgboost", "params": {
         "random_state": 42, "n_jobs": 1, "tree_method": "hist", "eval_metric": "logloss"}}
     base["cv"].update(n_splits=5, shuffle=True, random_state=42,

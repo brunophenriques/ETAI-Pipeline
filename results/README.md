@@ -14,6 +14,8 @@ report; the associated JSON, folds, OOF predictions and trials share its filenam
 | `week7/metadata/` | Experiment plan, environment and validation record |
 | `week8/selection_off/` | XGBoost without voting selection |
 | `week8/selection_on/` | XGBoost with selection, including feature names and votes |
+| `week8/b1/<method>/` | Comparable nested runs of vote, kbest and from_model, with timings |
+| `week8/b1/` comparison files | Timing/score summary and three corrected paired tests with Holm adjustment |
 | `week8/` comparison files | Run summary, paired scores, corrected test and validation |
 
 Smoke checks are ignored under week7/smoke/ and week8/smoke/. Selected Week 6-8

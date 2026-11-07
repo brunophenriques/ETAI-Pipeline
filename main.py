@@ -13,7 +13,7 @@ from threadpoolctl import threadpool_limits
 
 from src.data import load_data
 from src.preprocess import preprocess
-from src.model import build_pipeline
+from src.model import build_pipeline, selection_search_space
 from src.evaluate import (build_scorers, cross_validate_pipeline, cv_report,
                           fairness_report, oof_classification_report)
 from src.results import run_directory, save_run, save_scores
@@ -42,8 +42,9 @@ def _run(cache_dir):
         raise ValueError(f"No tuning search space configured for {model_type}; disable tuning for dummy.")
     selection_config = config.get("feature_selection", {})
     selection_enabled = selection_config.get("enabled", False)
+    selection_method = selection_config.get("method", "vote") if selection_enabled else "none"
     if enabled and selection_enabled:
-        space.update(selection_config.get("search_space", {}))
+        space.update(selection_search_space(selection_config))
 
     raw = load_data(config["data"]["path"])
     X_dev, X_test, y_dev, y_test, extras_dev, extras_test, preprocessor = preprocess(
@@ -101,9 +102,12 @@ def _run(cache_dir):
     stem = Path(results_dir) / f"{model_type}_{config['run_id']}"
     Path(str(stem) + "_features.json").write_text(json.dumps({
         "feature_selection": selection_enabled,
-        "min_votes": selector.min_votes if selector is not None else None,
+        "method": selection_method,
+        "min_votes": getattr(selector, "min_votes", None),
+        "k": getattr(selector, "k", None),
+        "threshold": getattr(selector, "threshold", None),
         "input_features": names.tolist(), "kept_features": kept,
-        "votes": selector.votes_.tolist() if selector is not None else None,
+        "votes": selector.votes_.tolist() if hasattr(selector, "votes_") else None,
     }, indent=2), encoding="utf-8")
     baseline.to_csv(str(stem) + "_default_folds.csv", index=False)
     if enabled:
@@ -135,7 +139,10 @@ def _run(cache_dir):
                tuned_params=json.dumps(study.best_params, sort_keys=True) if study else "",
                report=str(stem) + ".txt", test_evaluated=False,
                feature_selection=selection_enabled,
-               selection_min_votes=selector.min_votes if selector is not None else None,
+               selection_method=selection_method,
+               selection_min_votes=getattr(selector, "min_votes", None),
+               selection_k=getattr(selector, "k", None),
+               selection_threshold=getattr(selector, "threshold", None),
                n_features_before=len(names), n_features_kept=len(kept),
                kept_features=json.dumps(kept))
     for metric in metrics:
@@ -150,7 +157,7 @@ def _run(cache_dir):
     board = board[board["comparison_id"] == comparison_id].sort_values("mean", ascending=False)
     print(report)
     print("\nScoreboard (same data, features, folds and selection metric):")
-    print(board[["model", "tuned", "feature_selection", "untuned", "mean", "std", "floor"]].to_string(index=False))
+    print(board[["model", "tuned", "selection_method", "untuned", "mean", "std", "floor"]].to_string(index=False))
     print(f"Full results saved to {path}")
     print(feature_summary)
     return row

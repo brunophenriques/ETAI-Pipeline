@@ -100,7 +100,7 @@ These findings were documented in `notebooks/week3/01_eda_introduction.ipynb`. D
 | 5 | Added Optuna tuning and nested cross-validation, then tuned Logistic Regression and Random Forest and compared them with the tuned Decision Tree. |
 | 6 | Added AdaBoost and a projection-based oblique forest, compared the model families with 50-trial nested tuning, tested three engineered features, and compared boosted LR with plain LR. The final test set stayed aside. |
 | 7 | Added Gradient Boosting, HistGradientBoosting and Naive Bayes, eight evaluation metrics, OOF probabilities and confusion matrices, and a ROC-AUC scoreboard with untuned and nested results. |
-| 8 | Added XGBoost and fold-local voting feature selection with a temporary cache, tuned selection jointly with the model, and compared selection on/off with a corrected paired test. |
+| 8 | Added XGBoost and cached fold-local selection, compared selection on/off and vote/kbest/from_model with corrected tests, and measured the selectors' full-run times. |
 
 __________
 
@@ -424,7 +424,7 @@ python main.py
 
 ```
 
-The active configuration uses XGBoost, voting selection, ROC-AUC and 15 trials. Set tuning.enabled: false for an untuned check, or feature_selection.enabled: false to omit the learned selection step. To reproduce or resume the paired comparison:
+The Part A comparison uses XGBoost, voting selection, ROC-AUC and 15 trials; B1 below adds the configurable selector method. Set tuning.enabled: false for an untuned check, or feature_selection.enabled: false to omit the learned selection step. To reproduce or resume the paired comparison:
 
 ```bash
 
@@ -434,6 +434,55 @@ python -m scripts.run_week8
 
 The full reports, configurations, feature names/votes, Optuna trials, per-fold metrics, OOF probabilities and experiment settings are kept in results/week8/. The report header records the selection settings and the terminal output ends with Features kept. I added the generic corrected_paired_test() without changing the old imputation comparison's correction. The earlier Week 6 and Week 7 runners explicitly disable selection so that their original recipes stay reproducible.
 
-The final pipeline in each condition was refitted on development rows only. The 1,443 reserved test rows were not evaluated. Part A and the README task are complete; B1 (comparing other selector methods) remains optional and has not been run.
+The final pipeline in each condition was refitted on development rows only. The 1,443 reserved test rows were not evaluated. Part A and the README task are complete; the additional B1 comparison is documented below.
+
+### B1: Comparing other selectors
+
+I added feature_selection.method with three options: vote, kbest and from_model. The preprocessing and classifier steps stay the same; only the learned select step changes. Each method has its own search space, so a kbest trial cannot accidentally receive select__min_votes or a forest threshold.
+
+| Method | Learned selection rule | Selector hyperparameter tuned |
+|---|---|---|
+| vote | RF, Gradient Boosting and L1 LR vote for features | min_votes: 1 to 3 |
+| kbest | SelectKBest with the classification F statistic | k: 1 to 14 |
+| from_model | SelectFromModel with a 200-tree RF, min_samples_leaf: 20 | threshold: mean, median or 0.5*mean |
+
+I ran all three methods again for this comparison, with the same XGBoost search ranges, 15 trials per search, five inner and five outer stratified folds, ROC-AUC and seed 42. Every method was fitted inside the training folds and got a new temporary cache for its main.py run. I measured the whole run once per method, including the untuned baseline, nested searches, final search/refit and file output; these are not isolated selector-fit timings.
+
+| Selector | Nested ROC-AUC (mean ± std) | Train-validation gap | Final columns kept | Whole-run time |
+|---|---|---|---|---|
+| [vote](results/week8/b1/vote/xgboost_20261107_211522_907677.txt) | 0.7245 ± 0.0121 | +0.0097 | 3/14 | 58.9 s |
+| [kbest](results/week8/b1/kbest/xgboost_20261107_211621_787943.txt) | 0.7255 ± 0.0147 | +0.0120 | 6/14 | 26.3 s |
+| [from_model](results/week8/b1/from_model/xgboost_20261107_211648_090564.txt) | 0.7256 ± 0.0118 | +0.0102 | 5/14 | 60.3 s |
+
+The vote run reproduced Part A's nested score and its final three-column subset. Kbest's final search selected k = 6; from_model selected threshold = 0.5*mean and kept five columns.
+
+The six kbest columns were:
+
+- `numerical__priors_count`
+- `numerical__age`
+- `numerical__priors_per_adult_year`
+- `numerical__juvenile_offenses_total`
+- `numerical__age_x_priors`
+- `categorical__age_cat_Greater than 45`
+
+### Corrected comparisons between selectors
+
+I used the same corrected paired test on the five outer ROC-AUC differences for each pair. Since this creates three comparisons, I also report Holm-adjusted p-values. The 95% intervals below are pairwise intervals, not simultaneous confidence intervals.
+
+| Difference (first minus second) | Mean difference | Corrected 95% CI | Raw corrected p | Holm p |
+|---|---|---|---|---|
+| vote - kbest | -0.001025 | [-0.007447, +0.005396] | 0.6805 | 1.0000 |
+| vote - from_model | -0.001065 | [-0.004352, +0.002222] | 0.4193 | 1.0000 |
+| kbest - from_model | -0.000040 | [-0.005599, +0.005520] | 0.9851 | 1.0000 |
+
+For nearly the same recorded mean ROC-AUC, **kbest was fastest in this comparison: 26.3 seconds**, against 58.9 for vote and 60.3 for from_model. Its mean was only about 0.00004 below from_model, much smaller than their fold standard deviations, and none of the corrected tests detected a clear difference. This does not prove score equivalence, but I would now choose kbest when runtime matters, while vote remains the most compact final subset. These timings are indicative single-run measurements: worker startup, machine load and the different tuned XGBoost configurations contribute to the total, so they do not establish a universal speed ranking.
+
+The active config now uses method: kbest, with k: 5 as the untuned starting value; tuning can replace it, and the final experiment above chose 6. Vote remains available with method: vote, and the Part A runner explicitly reproduces the original voting comparison independently of this default.
+
+```bash
+python -m scripts.run_selectors
+```
+
+The [B1 summary](results/week8/b1/summary.csv), [paired fold scores](results/week8/b1/paired_fold_scores.csv) and [corrected tests](results/week8/b1/corrected_pairwise_tests.json) are saved under results/week8/b1/. Each method has its own subfolder containing its report, exact config, folds, OOF probabilities, trial history and selected feature names. The three runs were also appended to the shared scoreboard. No reserved test rows were evaluated; B1 is complete.
 
 #### have a nice weekend!
