@@ -7,14 +7,17 @@
 ```text
 ETAI-Pipeline/
   main.py                 # Normal pipeline entry point
-  config.yaml             # Data, preprocessing, model, CV and tuning settings
+  config.yaml             # Original COMPAS settings
+  config_adult.yaml       # Adult settings; one additional YAML
+  ADULT_README.md          # Week 9 write-up and Adult data dictionary
   requirements.txt
   src/                    # Reusable pipeline code
   scripts/                # Reproducible experiment runners
   tests/                  # Automated checks
-  data/                   # Dataset and data notes
+  data/                   # COMPAS dataset and data notes
+  data_adult/             # Labelled and unlabelled Adult CSVs
   notebooks/              # Lecture notebooks grouped by week
-    week3/ ... week8/
+    week3/ ... week9/
     shared/prerun/        # Shared course pre-run tables
   results/
     runs.csv              # Append-only scoreboard
@@ -22,6 +25,7 @@ ETAI-Pipeline/
     week7/                # One folder per model, plus metadata/
     week8/                # selection_on/, selection_off/ and comparison files
   docs/archive/           # Older notes and the path migration record
+  results_adult/          # Adult scoreboard, per-model reports and predictions
 ```
 
 Run commands from the repository root. The standard entry point remains `python main.py`.
@@ -29,6 +33,22 @@ Experiment commands now use `python -m scripts.<runner>`; see the [scripts guide
 The [results guide](results/README.md) explains the output folders, and the
 [notebook index](notebooks/README.md) lists the weekly material. Older local reports
 from Weeks 2-5 are preserved in matching `results/weekN/` folders but remain ignored by Git.
+
+### Running and checking
+
+```bash
+python main.py                              # COMPAS
+python main.py config_adult.yaml            # Adult, model selected in YAML
+python -m scripts.run_adult --untuned        # Adult, all models sequentially
+python -m unittest discover -s tests         # Automated checks
+```
+
+Activate the existing virtual environment first (`.\venv\Scripts\Activate.ps1`
+in PowerShell), or replace `python` with `venv\Scripts\python.exe`.
+The [Adult results index](results_adult/README.md) explains the scoreboards,
+prediction files and saved run notation. The [source guide](src/README.md)
+maps the reusable modules. Historical reports and drafts stay under their
+existing result folders or [docs/archive](docs/archive/README.md).
 
 ### WEEKLY CHALLENGES
 
@@ -101,6 +121,7 @@ These findings were documented in `notebooks/week3/01_eda_introduction.ipynb`. D
 | 6 | Added AdaBoost and a projection-based oblique forest, compared the model families with 50-trial nested tuning, tested three engineered features, and compared boosted LR with plain LR. The final test set stayed aside. |
 | 7 | Added Gradient Boosting, HistGradientBoosting and Naive Bayes, eight evaluation metrics, OOF probabilities and confusion matrices, and a ROC-AUC scoreboard with untuned and nested results. |
 | 8 | Added XGBoost and cached fold-local selection, compared selection on/off and vote/kbest/from_model with corrected tests, and measured the selectors' full-run times. |
+| 9 | Option A: added an Adult income config, dataset-independent fairness reporting, and row-preserving prediction export while retaining the COMPAS entry point. |
 
 __________
 
@@ -486,3 +507,14 @@ python -m scripts.run_selectors
 The [B1 summary](results/week8/b1/summary.csv), [paired fold scores](results/week8/b1/paired_fold_scores.csv) and [corrected tests](results/week8/b1/corrected_pairwise_tests.json) are saved under results/week8/b1/. Each method has its own subfolder containing its report, exact config, folds, OOF probabilities, trial history and selected feature names. The three runs were also appended to the shared scoreboard. No reserved test rows were evaluated; B1 is complete.
 
 #### have a nice weekend!
+
+
+## Beyond COMPAS - Week 9, Option A
+
+I adapted the existing pipeline to Adult income using `config_adult.yaml`, keeping the original COMPAS config and entry point. The model comparisons, 15- and 30-trial tuning results, cleaning changes, selected features and prediction files are documented in [ADULT_README.md](ADULT_README.md).
+
+```bash
+python main.py config_adult.yaml
+```
+
+Adult reports and predictions are saved separately in `results_adult/`.

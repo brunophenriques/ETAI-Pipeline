@@ -1,94 +1,15 @@
+"""Configuration-driven, deterministic row cleaning for COMPAS and Adult.
+
+Convert configured placeholders and invalid numeric values to missing values;
+normalise configured categories; remove duplicate training records and excluded
+columns. Keep learned imputation inside the fitted model pipeline.
+
+Dataset-specific rules live in config.yaml and config_adult.yaml. Unlabelled
+inference calls the individual cleaning steps without removing duplicate rows.
 """
-Preprocessing -- deliberately minimal for week 2.
-
-This is intentionally the weakest part of the pipeline:
-    - missing values are simply dropped (no imputation strategy)
-    - categorical columns are one-hot encoded with no thought given to unseen categories or cardinality
-    - a single train/test split is used (no cross-validation)
-
-You will replace this with something better in the coming weeks.
-
-One thing that is NOT naive, on purpose: `sensitive_attr` (race) is kept out of the model's input features entirely. It's split alongside the data so it's still available afterwards -- not to train on, but to check whether the model treats different groups differently. See src/evaluate.py:fairness_report.
-"""
-import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+import pandas as pd
 
-# ============================================================
-# DIAGNOSTICS QUICK REFERENCE
-# ============================================================
-#
-# Source file:
-#   data/compas_two_year_recidivism.csv
-#
-# ID column:
-#   id
-#
-# Placeholder / missing-value tokens:
-#   "", "-", "?", "N/A", "NA", "n/a", "na"
-#
-# Valid numerical ranges:
-#   age:            18 <= age <= 100
-#   decile_score:    1 <= decile_score <= 10
-#   juv_fel_count:   juv_fel_count >= 0
-#   priors_count:    0 <= priors_count <= 60
-#
-# Numerical columns:
-#   age
-#   decile_score
-#   juv_fel_count
-#   priors_count
-#
-# Canonical categories:
-#
-#   sex:
-#     male   -> Male
-#     female -> Female
-#
-#   c_charge_degree:
-#     f           -> F
-#     felony      -> F
-#     m           -> M
-#     misdemeanor -> M
-#
-#   score_text:
-#     low    -> Low
-#     medium -> Medium
-#     high   -> High
-#
-#   race:
-#     african-american -> African-American
-#     african american -> African-American
-#     asian            -> Asian
-#     caucasian        -> Caucasian
-#     hispanic         -> Hispanic
-#     native american  -> Native American
-#     other            -> Other
-#
-# Columns to drop during preprocessing:
-#   prior_offenses
-#   age_in_months
-#   juvenile_total
-#   id
-#
-# Columns excluded from model features later:
-#   id
-#   decile_score
-#   score_text
-#
-# Missingness findings:
-#   age             -> MCAR
-#   juv_fel_count   -> MCAR
-#   priors_count    -> MNAR
-#   c_charge_degree -> MNAR
-#   race            -> MCAR
-#   sex             -> MCAR
-#
-# Duplicate findings:
-#   exact row duplicates: 72
-#   repeated IDs:         72
-#
-# ============================================================
 
 def missing_value_diagnostics(df: pd.DataFrame, diagnostics_config: dict) -> pd.DataFrame:
     """
@@ -106,6 +27,10 @@ def missing_value_diagnostics(df: pd.DataFrame, diagnostics_config: dict) -> pd.
 
     placeholder_tokens = diagnostics_config.get("placeholder_tokens", [])
     numerical_columns = diagnostics_config.get("numerical_columns", [])
+
+    for col in diagnostics_config.get("strip_columns", []):
+        if col in out.columns:
+            out[col] = out[col].astype("string").str.strip()
 
     # Replace known placeholder tokens with NaN
     out.replace(placeholder_tokens, np.nan, inplace=True)

@@ -22,7 +22,7 @@ model, the more interesting question is the one ProPublica actually
 asked: is it equally accurate for everyone, or does it get things
 wrong more often, in a particular direction, for some groups than
 others? `race` is deliberately excluded from the model's own inputs
-(see `config.yaml` and `src/preprocessing.py`) so it can be used
+(see `config.yaml` and `src/preprocess.py`) so it can be used
 afterward purely to check this, in `src/evaluate.py`.
 
 Before any of that: look at the data first. It comes from a real

@@ -17,5 +17,9 @@ results/week6/*
 !results/week6/boosted_lr/
 !results/week7/
 !results/week8/
+adult_*.log
+results_adult/logs/
+test_run.log
+test_verified.log
 results/week7/smoke/
 results/week8/smoke/

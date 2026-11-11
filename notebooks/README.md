@@ -8,6 +8,7 @@
 | `week6/` | `05_ensembles.ipynb` |
 | `week7/` | `06_boosting.ipynb` and `07_metrics.ipynb` |
 | `week8/` | `08_feature_selection.ipynb` |
+| `week9/` | `09_beyond_compas.ipynb`: Option A/B instructions and README requirements |
 | `shared/prerun/` | Shared course pre-run tables |
 
 These are the course's worked examples; the experiments reported in the main

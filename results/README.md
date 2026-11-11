@@ -1,5 +1,8 @@
 # Results layout
 
+This folder contains **COMPAS** experiments. Adult experiments are separate in
+[`../results_adult/`](../results_adult/README.md).
+
 `runs.csv` is the append-only scoreboard. Its report column links to each full
 report; the associated JSON, folds, OOF predictions and trials share its filename stem.
 

@@ -1,0 +1,92 @@
+Run: 20261111_122557_080350
+Model: hist_gradient_boosting  params={'random_state': 42}
+Reserved test size: 0.2  random_state: 42
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'metrics': ['accuracy', 'balanced_accuracy', 'precision', 'recall', 'f1', 'fbeta_2', 'roc_auc', 'average_precision'], 'selection_metric': 'roc_auc', 'n_jobs': -1}
+Preprocessing settings: {'engineered_features': {'enabled': False}, 'scaler': 'standard', 'numerical_imputation': 'median', 'categorical_imputation': 'most_frequent', 'missing_indicator_columns': ['workclass', 'occupation'], 'extra_columns_to_impute': []}
+Feature selection settings: {'enabled': True, 'method': 'kbest', 'min_votes': 2, 'k': 25, 'threshold': 'mean', 'random_state': 42, 'search_spaces': {'vote': {'select__min_votes': {'type': 'int', 'low': 1, 'high': 3}}, 'kbest': {'select__k': {'type': 'int', 'low': 1, 'high': 35}}, 'from_model': {'select__threshold': {'type': 'categorical', 'choices': ['mean', 'median', '0.5*mean']}}}}
+Tuning settings: {'enabled': True, 'n_trials': 30, 'n_splits': 5, 'random_state': 42, 'search_spaces': {'xgboost': {'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 500, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.3, 'log': True}, 'classifier__max_depth': {'type': 'int', 'low': 2, 'high': 8}, 'classifier__min_child_weight': {'type': 'float', 'low': 1.0, 'high': 50.0, 'log': True}, 'classifier__gamma': {'type': 'float', 'low': 0.0, 'high': 5.0}, 'classifier__reg_alpha': {'type': 'float', 'low': 1e-08, 'high': 10.0, 'log': True}, 'classifier__reg_lambda': {'type': 'float', 'low': 0.001, 'high': 100.0, 'log': True}, 'classifier__subsample': {'type': 'float', 'low': 0.6, 'high': 1.0}, 'classifier__colsample_bytree': {'type': 'float', 'low': 0.5, 'high': 1.0}}, 'gradient_boosting': {'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 500, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.5, 'log': True}, 'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 6}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__subsample': {'type': 'float', 'low': 0.5, 'high': 1.0}}, 'hist_gradient_boosting': {'classifier__max_iter': {'type': 'int', 'low': 25, 'high': 500, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.5, 'log': True}, 'classifier__max_leaf_nodes': {'type': 'int', 'low': 2, 'high': 63, 'log': True}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 5, 'high': 200, 'log': True}, 'classifier__l2_regularization': {'type': 'float', 'low': 1e-06, 'high': 10.0, 'log': True}}, 'naive_bayes': {'classifier__var_smoothing': {'type': 'float', 'low': 1e-12, 'high': 0.01, 'log': True}}, 'adaboost_logistic_regression': {'classifier__estimator__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'adaboost': {'classifier__estimator__max_depth': {'type': 'int', 'low': 1, 'high': 8}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'oblique_random_forest': {'classifier__estimator__tree__max_depth': {'type': 'int', 'low': 2, 'high': 30}, 'classifier__estimator__tree__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__estimator__project__n_components': {'type': 'int', 'low': 3, 'high': 10}}, 'random_forest': {'classifier__n_estimators': {'type': 'int', 'low': 100, 'high': 500}, 'classifier__max_depth': {'type': 'categorical', 'choices': [None, 3, 5, 8, 12, 20]}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 100, 'log': True}, 'classifier__max_features': {'type': 'categorical', 'choices': ['sqrt', 'log2', None]}}, 'logistic_regression': {'classifier__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}}, 'decision_tree': {'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 20}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__criterion': {'type': 'categorical', 'choices': ['gini', 'entropy']}}}}
+============================================================
+
+Cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation    gap  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision
+    1 0.9690      0.8993 0.0696    0.8594             0.7832     0.7374  0.6376 0.6838   0.6553   0.8993             0.7845
+    2 0.9674      0.9060 0.0614    0.8604             0.7697     0.7697  0.5957 0.6716   0.6239   0.9060             0.7833
+    3 0.9685      0.9297 0.0388    0.8812             0.8058     0.8085  0.6609 0.7273   0.6859   0.9297             0.8319
+    4 0.9733      0.8877 0.0856    0.8406             0.7463     0.7104  0.5652 0.6295   0.5893   0.8877             0.7619
+    5 0.9716      0.9004 0.0711    0.8635             0.7971     0.7368  0.6696 0.7016   0.6820   0.9004             0.7954
+
+accuracy             0.8610 +/- 0.0144
+balanced_accuracy    0.7804 +/- 0.0235
+precision            0.7526 +/- 0.0377
+recall               0.6258 +/- 0.0443
+f1                   0.6828 +/- 0.0364
+fbeta_2              0.6473 +/- 0.0408
+roc_auc              0.9046 +/- 0.0155
+average_precision    0.7914 +/- 0.0257
+CV roc_auc (mean +/- std): 0.905 +/- 0.016
+Mean train-validation gap: +0.065
+
+No-model floor (dummy, same folds): roc_auc = 0.5000
+
+Nested cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation     gap  inner_best  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision  n_features_kept  classifier__max_iter  classifier__learning_rate  classifier__max_leaf_nodes  classifier__min_samples_leaf  classifier__l2_regularization  select__k
+    1 0.9239      0.9109  0.0130      0.9092    0.8750             0.7965     0.7914  0.6463 0.7115   0.6709   0.9109             0.8062               21                   313                     0.4071                           2                             7                         0.0000         21
+    2 0.9291      0.9112  0.0179      0.9112    0.8542             0.7478     0.7812  0.5435 0.6410   0.5787   0.9112             0.7891               26                   138                     0.3185                           3                            16                         1.0760         26
+    3 0.9183      0.9312 -0.0130      0.9037    0.8750             0.7942     0.7989  0.6391 0.7101   0.6658   0.9312             0.8369               15                   397                     0.3978                           2                            19                         0.0129         15
+    4 0.9270      0.8860  0.0410      0.9149    0.8406             0.7418     0.7175  0.5522 0.6241   0.5789   0.8860             0.7517               31                   234                     0.3695                           2                            13                         2.2492         31
+    5 0.9373      0.9088  0.0285      0.9108    0.8635             0.7956     0.7391  0.6652 0.7002   0.6788   0.9088             0.8078               23                   267                     0.3357                           3                            13                         2.0605         23
+
+accuracy             0.8617 +/- 0.0146
+balanced_accuracy    0.7752 +/- 0.0278
+precision            0.7657 +/- 0.0355
+recall               0.6093 +/- 0.0570
+f1                   0.6774 +/- 0.0416
+fbeta_2              0.6346 +/- 0.0512
+roc_auc              0.9096 +/- 0.0160
+average_precision    0.7984 +/- 0.0312
+Nested CV roc_auc (mean +/- std): 0.910 +/- 0.016
+Mean train-validation gap: +0.018
+
+Final search (30 trials, metric: roc_auc)
+Selected parameters: {'classifier__max_iter': 311, 'classifier__learning_rate': 0.06042972157687033, 'classifier__max_leaf_nodes': 6, 'classifier__min_samples_leaf': 17, 'classifier__l2_regularization': 8.494352850711646e-05, 'select__k': 16}
+Best Optuna trial score: 0.9109
+Nested CV mean score: 0.9096
+Mean inner best score: 0.9099
+Optimism check (mean inner best - outer mean): +0.0003
+Descriptive comparison: inner models use smaller training samples; not a pure bias estimate.
+Top 5 final trials:
+ number    value  params_classifier__l2_regularization  params_classifier__learning_rate  params_classifier__max_iter  params_classifier__max_leaf_nodes  params_classifier__min_samples_leaf  params_select__k                                                                               user_attrs_fold_scores  user_attrs_std
+     23 0.910868                              0.000085                          0.060430                          311                                  6                                   17                16 [0.9121320915895554, 0.9161167361524716, 0.9321649791542586, 0.8883889219773674, 0.9055390113162597]        0.015941
+     28 0.910053                              0.000001                          0.018564                          355                                 12                                   15                23 [0.9099755673570331, 0.9096694460988685, 0.9344758784991067, 0.8877307921381775, 0.9084157236450268]        0.016565
+     21 0.909411                              0.000001                          0.030367                          332                                  6                                   16                17  [0.9080072162916146, 0.9128141751042287, 0.9316557474687314, 0.887010125074449, 0.9075670041691483]        0.015918
+     18 0.909036                              0.000010                          0.043911                          410                                  5                                   35                18   [0.9092497565696331, 0.913522930315664, 0.9293091125670041, 0.886396664681358, 0.9067004169148303]        0.015404
+     25 0.908892                              0.000024                          0.139679                          313                                  3                                   14                14 [0.9115974408449274, 0.9116944609886837, 0.9276503871351995, 0.8875848719475878, 0.9059321024419298]        0.014403
+
+Classification report (development set, nested out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.88      0.94      0.91      3651
+           1       0.77      0.61      0.68      1149
+
+    accuracy                           0.86      4800
+   macro avg       0.82      0.78      0.80      4800
+weighted avg       0.86      0.86      0.86      4800
+
+Confusion matrix (rows=true, columns=predicted; labels=[0, 1]):
+[[3436  215]
+ [ 449  700]]
+
+False positive rate by sex (development set, nested out-of-fold predictions)
+(share of true class 0 rows predicted as class 1)
+
+  Our model:
+    female               FPR = 0.03  (n=1390)
+    male                 FPR = 0.08  (n=2261)
+
+
+New-row predictions saved to results_adult\hist_gradient_boosting\predictions.csv
+
+Features kept: 16/137: numerical__age, numerical__education_num, numerical__capital_gain, numerical__capital_loss, numerical__hours_per_week, categorical__workclass_private, categorical__workclass_self-emp-inc, categorical__marital_status_married-civ-spouse, categorical__marital_status_never-married, categorical__occupation_exec-managerial, categorical__occupation_other-service, categorical__occupation_prof-specialty, categorical__relationship_not-in-family, categorical__relationship_own-child, categorical__relationship_unmarried, categorical__relationship_wife
+
+Final pipeline refit on 4800 development rows.
+Reserved test set: 1200 rows (not evaluated).

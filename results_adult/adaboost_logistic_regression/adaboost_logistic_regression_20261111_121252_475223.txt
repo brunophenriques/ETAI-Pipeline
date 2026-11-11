@@ -1,0 +1,58 @@
+Run: 20261111_121252_475223
+Model: adaboost_logistic_regression  params={'random_state': 42, 'max_iter': 2000}
+Reserved test size: 0.2  random_state: 42
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'metrics': ['accuracy', 'balanced_accuracy', 'precision', 'recall', 'f1', 'fbeta_2', 'roc_auc', 'average_precision'], 'selection_metric': 'roc_auc', 'n_jobs': -1}
+Preprocessing settings: {'engineered_features': {'enabled': False}, 'scaler': 'standard', 'numerical_imputation': 'median', 'categorical_imputation': 'most_frequent', 'missing_indicator_columns': ['workclass', 'occupation'], 'extra_columns_to_impute': []}
+Feature selection settings: {'enabled': True, 'method': 'kbest', 'min_votes': 2, 'k': 25, 'threshold': 'mean', 'random_state': 42, 'search_spaces': {'vote': {'select__min_votes': {'type': 'int', 'low': 1, 'high': 3}}, 'kbest': {'select__k': {'type': 'int', 'low': 1, 'high': 35}}, 'from_model': {'select__threshold': {'type': 'categorical', 'choices': ['mean', 'median', '0.5*mean']}}}}
+Tuning settings: {'enabled': False, 'n_trials': 15, 'n_splits': 5, 'random_state': 42, 'search_spaces': {'xgboost': {'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 500, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.3, 'log': True}, 'classifier__max_depth': {'type': 'int', 'low': 2, 'high': 8}, 'classifier__min_child_weight': {'type': 'float', 'low': 1.0, 'high': 50.0, 'log': True}, 'classifier__gamma': {'type': 'float', 'low': 0.0, 'high': 5.0}, 'classifier__reg_alpha': {'type': 'float', 'low': 1e-08, 'high': 10.0, 'log': True}, 'classifier__reg_lambda': {'type': 'float', 'low': 0.001, 'high': 100.0, 'log': True}, 'classifier__subsample': {'type': 'float', 'low': 0.6, 'high': 1.0}, 'classifier__colsample_bytree': {'type': 'float', 'low': 0.5, 'high': 1.0}}, 'gradient_boosting': {'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 500, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.5, 'log': True}, 'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 6}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__subsample': {'type': 'float', 'low': 0.5, 'high': 1.0}}, 'hist_gradient_boosting': {'classifier__max_iter': {'type': 'int', 'low': 25, 'high': 500, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.5, 'log': True}, 'classifier__max_leaf_nodes': {'type': 'int', 'low': 2, 'high': 63, 'log': True}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 5, 'high': 200, 'log': True}, 'classifier__l2_regularization': {'type': 'float', 'low': 1e-06, 'high': 10.0, 'log': True}}, 'naive_bayes': {'classifier__var_smoothing': {'type': 'float', 'low': 1e-12, 'high': 0.01, 'log': True}}, 'adaboost_logistic_regression': {'classifier__estimator__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'adaboost': {'classifier__estimator__max_depth': {'type': 'int', 'low': 1, 'high': 8}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'oblique_random_forest': {'classifier__estimator__tree__max_depth': {'type': 'int', 'low': 2, 'high': 30}, 'classifier__estimator__tree__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__estimator__project__n_components': {'type': 'int', 'low': 3, 'high': 10}}, 'random_forest': {'classifier__n_estimators': {'type': 'int', 'low': 100, 'high': 500}, 'classifier__max_depth': {'type': 'categorical', 'choices': [None, 3, 5, 8, 12, 20]}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 100, 'log': True}, 'classifier__max_features': {'type': 'categorical', 'choices': ['sqrt', 'log2', None]}}, 'logistic_regression': {'classifier__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}}, 'decision_tree': {'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 20}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__criterion': {'type': 'categorical', 'choices': ['gini', 'entropy']}}}}
+============================================================
+
+Cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation     gap  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision
+    1 0.8805      0.8809 -0.0004    0.8365             0.7757     0.6565  0.6594 0.6580   0.6588   0.8809             0.7223
+    2 0.8787      0.8869 -0.0081    0.8344             0.7675     0.6592  0.6391 0.6490   0.6430   0.8869             0.7013
+    3 0.8772      0.9033 -0.0261    0.8448             0.7922     0.6709  0.6913 0.6809   0.6871   0.9033             0.7448
+    4 0.8917      0.8550  0.0368    0.8271             0.7538     0.6468  0.6130 0.6295   0.6195   0.8550             0.6765
+    5 0.8852      0.8936 -0.0084    0.8385             0.7777     0.6638  0.6609 0.6623   0.6614   0.8936             0.7596
+
+accuracy             0.8363 +/- 0.0064
+balanced_accuracy    0.7734 +/- 0.0141
+precision            0.6594 +/- 0.0089
+recall               0.6527 +/- 0.0290
+f1                   0.6559 +/- 0.0188
+fbeta_2              0.6540 +/- 0.0249
+roc_auc              0.8839 +/- 0.0182
+average_precision    0.7209 +/- 0.0333
+CV roc_auc (mean +/- std): 0.884 +/- 0.018
+Mean train-validation gap: -0.001
+
+No-model floor (dummy, same folds): roc_auc = 0.5000
+
+Classification report (development set, out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.89      0.89      0.89      3651
+           1       0.66      0.65      0.66      1149
+
+    accuracy                           0.84      4800
+   macro avg       0.78      0.77      0.77      4800
+weighted avg       0.84      0.84      0.84      4800
+
+Confusion matrix (rows=true, columns=predicted; labels=[0, 1]):
+[[3264  387]
+ [ 399  750]]
+
+False positive rate by sex (development set, out-of-fold predictions)
+(share of true class 0 rows predicted as class 1)
+
+  Our model:
+    female               FPR = 0.04  (n=1390)
+    male                 FPR = 0.15  (n=2261)
+
+
+New-row predictions saved to results_adult\adaboost_logistic_regression\predictions.csv
+
+Features kept: 25/137: numerical__age, numerical__education_num, numerical__capital_gain, numerical__capital_loss, numerical__hours_per_week, numerical__workclass_was_missing, numerical__occupation_was_missing, categorical__workclass_private, categorical__workclass_self-emp-inc, categorical__marital_status_married-civ-spouse, categorical__marital_status_never-married, categorical__marital_status_separated, categorical__marital_status_widowed, categorical__occupation_exec-managerial, categorical__occupation_farming-fishing, categorical__occupation_handlers-cleaners, categorical__occupation_machine-op-inspct, categorical__occupation_other-service, categorical__occupation_prof-specialty, categorical__relationship_not-in-family, categorical__relationship_other-relative, categorical__relationship_own-child, categorical__relationship_unmarried, categorical__relationship_wife, categorical__native_country_mexico
+
+Final pipeline refit on 4800 development rows.
+Reserved test set: 1200 rows (not evaluated).

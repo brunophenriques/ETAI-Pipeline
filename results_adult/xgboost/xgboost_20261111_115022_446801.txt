@@ -1,0 +1,92 @@
+Run: 20261111_115022_446801
+Model: xgboost  params={'random_state': 42, 'n_jobs': 1, 'tree_method': 'hist', 'eval_metric': 'logloss', 'n_estimators': 300, 'max_depth': 3, 'learning_rate': 0.05}
+Reserved test size: 0.2  random_state: 42
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'metrics': ['accuracy', 'balanced_accuracy', 'precision', 'recall', 'f1', 'fbeta_2', 'roc_auc', 'average_precision'], 'selection_metric': 'roc_auc', 'n_jobs': -1}
+Preprocessing settings: {'engineered_features': {'enabled': False}, 'scaler': 'standard', 'numerical_imputation': 'median', 'categorical_imputation': 'most_frequent', 'missing_indicator_columns': ['workclass', 'occupation'], 'extra_columns_to_impute': []}
+Feature selection settings: {'enabled': True, 'method': 'from_model', 'threshold': '0.5*mean', 'random_state': 42, 'search_spaces': {'from_model': {'select__threshold': {'type': 'categorical', 'choices': ['0.5*mean', '0.25*mean']}}}}
+Tuning settings: {'enabled': True, 'n_trials': 15, 'n_splits': 5, 'random_state': 42, 'search_spaces': {'xgboost': {'classifier__n_estimators': {'type': 'int', 'low': 150, 'high': 450}, 'classifier__learning_rate': {'type': 'float', 'low': 0.03, 'high': 0.12, 'log': True}, 'classifier__max_depth': {'type': 'int', 'low': 2, 'high': 5}, 'classifier__min_child_weight': {'type': 'float', 'low': 1.0, 'high': 10.0, 'log': True}, 'classifier__subsample': {'type': 'float', 'low': 0.8, 'high': 1.0}, 'classifier__colsample_bytree': {'type': 'float', 'low': 0.8, 'high': 1.0}}}}
+============================================================
+
+Cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation    gap  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision
+    1 0.9522      0.9077 0.0444    0.8615             0.7681     0.7759  0.5895 0.6700   0.6193   0.9077             0.7919
+    2 0.9573      0.9091 0.0482    0.8458             0.7304     0.7697  0.5087 0.6126   0.5457   0.9091             0.7751
+    3 0.9536      0.9221 0.0315    0.8625             0.7696     0.7816  0.5913 0.6733   0.6216   0.9221             0.8184
+    4 0.9594      0.8796 0.0798    0.8438             0.7424     0.7326  0.5478 0.6269   0.5769   0.8796             0.7494
+    5 0.9539      0.9081 0.0457    0.8604             0.7817     0.7474  0.6304 0.6840   0.6508   0.9081             0.8010
+
+accuracy             0.8548 +/- 0.0092
+balanced_accuracy    0.7584 +/- 0.0212
+precision            0.7614 +/- 0.0207
+recall               0.5736 +/- 0.0466
+f1                   0.6533 +/- 0.0315
+fbeta_2              0.6029 +/- 0.0414
+roc_auc              0.9053 +/- 0.0156
+average_precision    0.7872 +/- 0.0263
+CV roc_auc (mean +/- std): 0.905 +/- 0.016
+Mean train-validation gap: +0.050
+
+No-model floor (dummy, same folds): roc_auc = 0.5000
+
+Nested cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation     gap  inner_best  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision  n_features_kept  classifier__n_estimators  classifier__learning_rate  classifier__max_depth  classifier__min_child_weight  classifier__subsample  classifier__colsample_bytree select__threshold
+    1 0.9194      0.9075  0.0119      0.9018    0.8625             0.7628     0.7939  0.5721 0.6650   0.6059   0.9075             0.7927               32                       254                     0.0362                      2                        1.1631                 0.9479                        0.9027          0.5*mean
+    2 0.9236      0.9060  0.0176      0.9059    0.8490             0.7309     0.7891  0.5043 0.6154   0.5436   0.9060             0.7672               40                       186                     0.0596                      2                        8.1156                 0.8518                        0.9325         0.25*mean
+    3 0.9119      0.9219 -0.0100      0.8955    0.8542             0.7493     0.7778  0.5478 0.6429   0.5823   0.9219             0.8092               35                       198                     0.0380                      2                        1.1255                 0.8680                        0.8729          0.5*mean
+    4 0.9280      0.8817  0.0463      0.9105    0.8469             0.7430     0.7485  0.5435 0.6297   0.5750   0.8817             0.7514               40                       211                     0.0520                      2                        5.7044                 0.9008                        0.8849         0.25*mean
+    5 0.9144      0.9028  0.0116      0.9019    0.8615             0.7794     0.7566  0.6217 0.6826   0.6447   0.9028             0.7896               31                       176                     0.0394                      2                        2.1151                 0.8777                        0.8543          0.5*mean
+
+accuracy             0.8548 +/- 0.0071
+balanced_accuracy    0.7531 +/- 0.0187
+precision            0.7732 +/- 0.0199
+recall               0.5579 +/- 0.0432
+f1                   0.6471 +/- 0.0269
+fbeta_2              0.5903 +/- 0.0377
+roc_auc              0.9040 +/- 0.0145
+average_precision    0.7820 +/- 0.0227
+Nested CV roc_auc (mean +/- std): 0.904 +/- 0.014
+Mean train-validation gap: +0.015
+
+Final search (15 trials, metric: roc_auc)
+Selected parameters: {'classifier__n_estimators': 242, 'classifier__learning_rate': 0.03517274289200653, 'classifier__max_depth': 2, 'classifier__min_child_weight': 6.8998171587399835, 'classifier__subsample': 0.8788010459310327, 'classifier__colsample_bytree': 0.9101090182496571, 'select__threshold': '0.25*mean'}
+Best Optuna trial score: 0.9047
+Nested CV mean score: 0.9040
+Mean inner best score: 0.9031
+Optimism check (mean inner best - outer mean): -0.0008
+Descriptive comparison: inner models use smaller training samples; not a pure bias estimate.
+Top 5 final trials:
+ number    value  params_classifier__colsample_bytree  params_classifier__learning_rate  params_classifier__max_depth  params_classifier__min_child_weight  params_classifier__n_estimators  params_classifier__subsample params_select__threshold                                                                               user_attrs_fold_scores  user_attrs_std
+     14 0.904687                             0.910109                          0.035173                             2                             6.899817                              242                      0.878801                0.25*mean [0.9084761557715397, 0.9051042287075639, 0.9213728409767719, 0.8833591423466349, 0.9051250744490769]        0.013675
+      5 0.904593                             0.932504                          0.059600                             2                             8.115596                              186                      0.851756                0.25*mean [0.9077354106057981, 0.9059797498511019, 0.9225253126861227, 0.8816497915425848, 0.9050744490768314]        0.014663
+     12 0.904296                             0.918406                          0.037785                             3                             8.572327                              219                      0.850082                0.25*mean [0.9076995680977784, 0.9038117927337701, 0.9225908278737345, 0.8829422275163789, 0.9044371649791543]        0.014164
+     11 0.904068                             0.889011                          0.071076                             2                             5.871526                              163                      0.877291                0.25*mean  [0.9082551269720847, 0.904711137581894, 0.9206789755807029, 0.8817689100655152, 0.9049255509231686]        0.014070
+      2 0.903964                             0.827899                          0.062095                             3                             1.955371                              241                      0.922371                0.25*mean  [0.9078907281405503, 0.9070279928528887, 0.921131625967838, 0.8770696843359143, 0.9067004169148303]        0.016204
+
+Classification report (development set, nested out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.87      0.95      0.91      3651
+           1       0.77      0.56      0.65      1149
+
+    accuracy                           0.85      4800
+   macro avg       0.82      0.75      0.78      4800
+weighted avg       0.85      0.85      0.85      4800
+
+Confusion matrix (rows=true, columns=predicted; labels=[0, 1]):
+[[3462  189]
+ [ 508  641]]
+
+False positive rate by sex (development set, nested out-of-fold predictions)
+(share of true class 0 rows predicted as class 1)
+
+  Our model:
+    female               FPR = 0.01  (n=1390)
+    male                 FPR = 0.08  (n=2261)
+
+
+New-row predictions saved to results_adult\predictions.csv
+
+Features kept: 41/137: numerical__age, numerical__education_num, numerical__capital_gain, numerical__capital_loss, numerical__hours_per_week, numerical__v01, numerical__v02, numerical__v03, numerical__v04, numerical__v05, numerical__v06, numerical__v07, numerical__v08, numerical__v09, numerical__v10, numerical__v11, numerical__v12, numerical__v13, numerical__v14, numerical__v15, numerical__v16, numerical__v17, numerical__v18, numerical__workclass_was_missing, numerical__occupation_was_missing, categorical__workclass_private, categorical__workclass_self-emp-inc, categorical__workclass_self-emp-not-inc, categorical__marital_status_married-civ-spouse, categorical__marital_status_never-married, categorical__occupation_craft-repair, categorical__occupation_exec-managerial, categorical__occupation_farming-fishing, categorical__occupation_handlers-cleaners, categorical__occupation_other-service, categorical__occupation_prof-specialty, categorical__relationship_not-in-family, categorical__relationship_other-relative, categorical__relationship_own-child, categorical__relationship_unmarried, categorical__relationship_wife
+
+Final pipeline refit on 4800 development rows.
+Reserved test set: 1200 rows (not evaluated).

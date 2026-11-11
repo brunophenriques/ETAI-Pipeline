@@ -1,0 +1,197 @@
+{
+  "data": {
+    "path": "data_adult/adult_train.csv",
+    "prediction_path": "data_adult/adult_new.csv",
+    "target": "income_over_50k",
+    "sensitive_attr": "sex",
+    "drop_columns": [
+      "id",
+      "fnlwgt",
+      "education",
+      "race"
+    ]
+  },
+  "diagnostics": {
+    "id_column": "id",
+    "placeholder_tokens": [
+      "",
+      "-",
+      "?",
+      "N/A",
+      "NA",
+      "n/a",
+      "na"
+    ],
+    "strip_columns": [
+      "workclass",
+      "marital_status",
+      "occupation",
+      "relationship",
+      "native_country",
+      "sex",
+      "race",
+      "v19",
+      "v20",
+      "v21",
+      "v22",
+      "v23",
+      "v24",
+      "v25"
+    ],
+    "numerical_columns": [
+      "age",
+      "education_num",
+      "capital_gain",
+      "capital_loss",
+      "hours_per_week",
+      "v01",
+      "v02",
+      "v03",
+      "v04",
+      "v05",
+      "v06",
+      "v07",
+      "v08",
+      "v09",
+      "v10",
+      "v11",
+      "v12",
+      "v13",
+      "v14",
+      "v15",
+      "v16",
+      "v17",
+      "v18"
+    ],
+    "canonical_categories": {
+      "workclass": {},
+      "marital_status": {},
+      "occupation": {},
+      "relationship": {},
+      "native_country": {},
+      "sex": {},
+      "race": {},
+      "v19": {},
+      "v20": {},
+      "v21": {},
+      "v22": {},
+      "v23": {},
+      "v24": {},
+      "v25": {}
+    },
+    "validity_rules": {
+      "age": {
+        "min": 17,
+        "max": 90
+      },
+      "hours_per_week": {
+        "min": 1,
+        "max": 99
+      },
+      "capital_gain": {
+        "min": 0
+      },
+      "capital_loss": {
+        "min": 0
+      }
+    },
+    "columns_to_drop": [],
+    "num_missing_rows": 1419
+  },
+  "preprocessing": {
+    "engineered_features": {
+      "enabled": false
+    },
+    "scaler": "standard",
+    "numerical_imputation": "median",
+    "categorical_imputation": "most_frequent",
+    "missing_indicator_columns": [
+      "workclass",
+      "occupation"
+    ],
+    "extra_columns_to_impute": []
+  },
+  "split": {
+    "test_size": 0.2,
+    "random_state": 42
+  },
+  "cv": {
+    "n_splits": 5,
+    "shuffle": true,
+    "random_state": 42,
+    "metrics": [
+      "accuracy",
+      "balanced_accuracy",
+      "precision",
+      "recall",
+      "f1",
+      "fbeta_2",
+      "roc_auc",
+      "average_precision"
+    ],
+    "selection_metric": "roc_auc",
+    "n_jobs": -1
+  },
+  "feature_selection": {
+    "enabled": true,
+    "method": "kbest",
+    "k": 25,
+    "search_spaces": {
+      "kbest": {
+        "select__k": {
+          "type": "int",
+          "low": 20,
+          "high": 35
+        }
+      }
+    }
+  },
+  "tuning": {
+    "enabled": true,
+    "n_trials": 15,
+    "n_splits": 5,
+    "random_state": 42,
+    "search_spaces": {
+      "hist_gradient_boosting": {
+        "classifier__max_iter": {
+          "type": "int",
+          "low": 100,
+          "high": 250
+        },
+        "classifier__max_leaf_nodes": {
+          "type": "int",
+          "low": 7,
+          "high": 15
+        },
+        "classifier__learning_rate": {
+          "type": "float",
+          "low": 0.05,
+          "high": 0.12
+        },
+        "classifier__l2_regularization": {
+          "type": "float",
+          "low": 0.1,
+          "high": 10.0,
+          "log": true
+        }
+      }
+    }
+  },
+  "model": {
+    "type": "hist_gradient_boosting",
+    "params": {
+      "max_iter": 200,
+      "max_leaf_nodes": 15,
+      "learning_rate": 0.08,
+      "l2_regularization": 1.0,
+      "random_state": 42
+    }
+  },
+  "output": {
+    "results_dir": "results_adult",
+    "scoreboard": "results_adult/runs.csv",
+    "layout": "flat",
+    "predictions": "results_adult/predictions.csv"
+  },
+  "run_id": "20261111_115204_292501"
+}

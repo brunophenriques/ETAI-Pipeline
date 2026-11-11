@@ -1,0 +1,58 @@
+Run: 20261111_115130_821262
+Model: xgboost  params={'random_state': 42, 'n_jobs': 1, 'tree_method': 'hist', 'eval_metric': 'logloss', 'n_estimators': 300, 'max_depth': 3, 'learning_rate': 0.05}
+Reserved test size: 0.2  random_state: 42
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'metrics': ['accuracy', 'balanced_accuracy', 'precision', 'recall', 'f1', 'fbeta_2', 'roc_auc', 'average_precision'], 'selection_metric': 'roc_auc', 'n_jobs': -1}
+Preprocessing settings: {'engineered_features': {'enabled': False}, 'scaler': 'standard', 'numerical_imputation': 'median', 'categorical_imputation': 'most_frequent', 'missing_indicator_columns': ['workclass', 'occupation'], 'extra_columns_to_impute': []}
+Feature selection settings: {'enabled': False, 'method': 'from_model', 'threshold': '0.5*mean', 'random_state': 42, 'search_spaces': {'from_model': {'select__threshold': {'type': 'categorical', 'choices': ['0.5*mean', '0.25*mean']}}}}
+Tuning settings: {'enabled': False, 'n_trials': 15, 'n_splits': 5, 'random_state': 42, 'search_spaces': {'xgboost': {'classifier__n_estimators': {'type': 'int', 'low': 150, 'high': 450}, 'classifier__learning_rate': {'type': 'float', 'low': 0.03, 'high': 0.12, 'log': True}, 'classifier__max_depth': {'type': 'int', 'low': 2, 'high': 5}, 'classifier__min_child_weight': {'type': 'float', 'low': 1.0, 'high': 10.0, 'log': True}, 'classifier__subsample': {'type': 'float', 'low': 0.8, 'high': 1.0}, 'classifier__colsample_bytree': {'type': 'float', 'low': 0.8, 'high': 1.0}}}}
+============================================================
+
+Cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation    gap  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision
+    1 0.9554      0.9063 0.0491    0.8625             0.7703     0.7771  0.5939 0.6733   0.6233   0.9063             0.7923
+    2 0.9581      0.9058 0.0523    0.8490             0.7354     0.7778  0.5174 0.6214   0.5545   0.9058             0.7709
+    3 0.9548      0.9257 0.0291    0.8750             0.7838     0.8235  0.6087 0.7000   0.6422   0.9257             0.8255
+    4 0.9605      0.8800 0.0805    0.8458             0.7453     0.7384  0.5522 0.6318   0.5815   0.8800             0.7518
+    5 0.9596      0.9073 0.0524    0.8604             0.7817     0.7474  0.6304 0.6840   0.6508   0.9073             0.7939
+
+accuracy             0.8585 +/- 0.0117
+balanced_accuracy    0.7633 +/- 0.0218
+precision            0.7728 +/- 0.0333
+recall               0.5805 +/- 0.0454
+f1                   0.6621 +/- 0.0339
+fbeta_2              0.6105 +/- 0.0411
+roc_auc              0.9050 +/- 0.0163
+average_precision    0.7869 +/- 0.0276
+CV roc_auc (mean +/- std): 0.905 +/- 0.016
+Mean train-validation gap: +0.053
+
+No-model floor (dummy, same folds): roc_auc = 0.5000
+
+Classification report (development set, out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.88      0.95      0.91      3651
+           1       0.77      0.58      0.66      1149
+
+    accuracy                           0.86      4800
+   macro avg       0.82      0.76      0.79      4800
+weighted avg       0.85      0.86      0.85      4800
+
+Confusion matrix (rows=true, columns=predicted; labels=[0, 1]):
+[[3454  197]
+ [ 482  667]]
+
+False positive rate by sex (development set, out-of-fold predictions)
+(share of true class 0 rows predicted as class 1)
+
+  Our model:
+    female               FPR = 0.02  (n=1390)
+    male                 FPR = 0.08  (n=2261)
+
+
+New-row predictions saved to results_adult\predictions.csv
+
+Features kept: 137/137: numerical__age, numerical__education_num, numerical__capital_gain, numerical__capital_loss, numerical__hours_per_week, numerical__v01, numerical__v02, numerical__v03, numerical__v04, numerical__v05, numerical__v06, numerical__v07, numerical__v08, numerical__v09, numerical__v10, numerical__v11, numerical__v12, numerical__v13, numerical__v14, numerical__v15, numerical__v16, numerical__v17, numerical__v18, numerical__workclass_was_missing, numerical__occupation_was_missing, categorical__workclass_local-gov, categorical__workclass_never-worked, categorical__workclass_private, categorical__workclass_self-emp-inc, categorical__workclass_self-emp-not-inc, categorical__workclass_state-gov, categorical__workclass_without-pay, categorical__marital_status_married-af-spouse, categorical__marital_status_married-civ-spouse, categorical__marital_status_married-spouse-absent, categorical__marital_status_never-married, categorical__marital_status_separated, categorical__marital_status_widowed, categorical__occupation_armed-forces, categorical__occupation_craft-repair, categorical__occupation_exec-managerial, categorical__occupation_farming-fishing, categorical__occupation_handlers-cleaners, categorical__occupation_machine-op-inspct, categorical__occupation_other-service, categorical__occupation_priv-house-serv, categorical__occupation_prof-specialty, categorical__occupation_protective-serv, categorical__occupation_sales, categorical__occupation_tech-support, categorical__occupation_transport-moving, categorical__relationship_not-in-family, categorical__relationship_other-relative, categorical__relationship_own-child, categorical__relationship_unmarried, categorical__relationship_wife, categorical__native_country_canada, categorical__native_country_china, categorical__native_country_columbia, categorical__native_country_cuba, categorical__native_country_dominican-republic, categorical__native_country_ecuador, categorical__native_country_el-salvador, categorical__native_country_england, categorical__native_country_france, categorical__native_country_germany, categorical__native_country_greece, categorical__native_country_guatemala, categorical__native_country_haiti, categorical__native_country_honduras, categorical__native_country_hong, categorical__native_country_india, categorical__native_country_iran, categorical__native_country_ireland, categorical__native_country_italy, categorical__native_country_jamaica, categorical__native_country_laos, categorical__native_country_mexico, categorical__native_country_nicaragua, categorical__native_country_outlying-us(guam-usvi-etc), categorical__native_country_peru, categorical__native_country_philippines, categorical__native_country_poland, categorical__native_country_portugal, categorical__native_country_puerto-rico, categorical__native_country_scotland, categorical__native_country_south, categorical__native_country_taiwan, categorical__native_country_thailand, categorical__native_country_trinadad&tobago, categorical__native_country_united-states, categorical__native_country_vietnam, categorical__native_country_yugoslavia, categorical__v19_b18, categorical__v19_c18, categorical__v19_d18, categorical__v19_e18, categorical__v19_f18, categorical__v19_g18, categorical__v20_b19, categorical__v20_c19, categorical__v20_d19, categorical__v21_b20, categorical__v21_c20, categorical__v21_d20, categorical__v21_e20, categorical__v21_f20, categorical__v21_g20, categorical__v21_h20, categorical__v22_b21, categorical__v22_c21, categorical__v22_d21, categorical__v22_e21, categorical__v22_f21, categorical__v22_g21, categorical__v22_h21, categorical__v22_i21, categorical__v22_j21, categorical__v23_b22, categorical__v23_c22, categorical__v23_d22, categorical__v23_e22, categorical__v23_f22, categorical__v23_g22, categorical__v23_h22, categorical__v23_i22, categorical__v23_j22, categorical__v24_b23, categorical__v24_c23, categorical__v24_d23, categorical__v24_e23, categorical__v24_f23, categorical__v25_b24, categorical__v25_c24, categorical__v25_d24, categorical__v25_e24, categorical__v25_f24
+
+Final pipeline refit on 4800 development rows.
+Reserved test set: 1200 rows (not evaluated).

@@ -1,6 +1,7 @@
 """Development-only multimetric CV, nested tuning, and an append-only scoreboard."""
 import hashlib
 import json
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -25,8 +26,8 @@ def load_config(path: str = "config.yaml") -> dict:
         return yaml.safe_load(file)
 
 
-def _run(cache_dir):
-    config = load_config()
+def _run(cache_dir, config_path="config.yaml", config=None):
+    config = load_config(config_path) if config is None else deepcopy(config)
     config["run_id"] = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     model_type = config["model"]["type"]
     cv_config = config["cv"]
@@ -89,6 +90,10 @@ def _run(cache_dir):
     report += "\n\n" + fairness_report(y_dev, proba, extras_dev,
         sensitive_attr=config["data"]["sensitive_attr"], context=context, probabilities=True)
     model.fit(X_dev, y_dev)
+    if config["data"].get("prediction_path"):
+        from src.inference import predict_new_rows
+        prediction_path = predict_new_rows(model, X_dev.columns, config)
+        report += f"\n\nNew-row predictions saved to {prediction_path}"
     names = model.named_steps["preprocessing"].get_feature_names_out()
     selector = model.named_steps.get("select")
     kept = selector.get_feature_names_out(names) if selector is not None else names
@@ -164,12 +169,15 @@ def _run(cache_dir):
 
 
 @threadpool_limits.wrap(limits=1)
-def main():
+def main(config_path="config.yaml", *, config=None):
     # This context owns a fresh OS temporary directory; only its own cache is
     # removed on success or failure. Joblib keys fits by parameters and X/y.
     with TemporaryDirectory(prefix="etai_pipeline_cache_") as cache_dir:
-        return _run(cache_dir)
+        return _run(cache_dir, config_path, config)
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("config", nargs="?", default="config.yaml")
+    main(parser.parse_args().config)

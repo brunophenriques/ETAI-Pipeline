@@ -327,3 +327,83 @@ def preprocess(
         extras_test,
         feature_preprocessor,
     )
+
+
+
+def recover_recency(
+    df: pd.DataFrame,
+    history: pd.DataFrame,
+    config: dict
+) -> pd.DataFrame:
+    """
+    Recover missing recency using strictly earlier purchases.
+
+    history must contain only transactions available
+    at prediction time.
+
+    Does not learn imputation statistics.
+    """
+    data = df.copy()
+
+    settings = config["preprocessing"]["recency"]
+
+    if not settings["recover_from_previous_date"]:
+        return data
+
+    date_col = config["preprocessing"][
+        "date_features"
+    ]["source_column"]
+
+    customer_col = config["columns"]["customer_id"]
+
+    data[date_col] = pd.to_datetime(data[date_col])
+
+    past = history[[customer_col, date_col]].copy()
+    past[date_col] = pd.to_datetime(past[date_col])
+
+    past = past.dropna(subset=[date_col])
+    past = past.rename(
+        columns={date_col: "historical_purchase_date"}
+    )
+
+    # merge_asof requires chronological sorting.
+    left = data.assign(_row_order=range(len(data)))
+    left = left.sort_values(date_col)
+
+    right = past.sort_values("historical_purchase_date")
+
+    merged = pd.merge_asof(
+        left,
+        right,
+        left_on=date_col,
+        right_on="historical_purchase_date",
+        by=customer_col,
+        direction="backward",
+        allow_exact_matches=False,
+    )
+
+    missing = merged["days_since_previous_purchase"].isna()
+
+    recoverable = (
+        missing
+        & (merged["prior_purchase_count"] >= 1)
+        & merged["historical_purchase_date"].notna()
+    )
+
+    merged["recency_was_recovered"] = (
+        recoverable.astype(int)
+    )
+
+    merged.loc[recoverable, "days_since_previous_purchase"] = (
+        merged.loc[recoverable, date_col]
+        - merged.loc[recoverable, "historical_purchase_date"]
+    ).dt.days.to_numpy()
+
+    merged = (
+        merged.sort_values("_row_order")
+        .drop(columns=["_row_order", "historical_purchase_date"])
+    )
+
+    merged.index = data.index
+
+    return merged
