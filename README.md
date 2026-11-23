@@ -6,7 +6,8 @@
 
 ```text
 ETAI-Pipeline/
-  main.py                 # Normal pipeline entry point
+  main.py                 # Train, evaluate and save fitted pipeline
+  predict.py              # Predict new CSV rows from a saved model
   config.yaml             # Original COMPAS settings
   config_adult.yaml       # Adult settings; one additional YAML
   ADULT_README.md          # Week 9 write-up and Adult data dictionary
@@ -18,6 +19,7 @@ ETAI-Pipeline/
   data_adult/             # Labelled and unlabelled Adult CSVs
   notebooks/              # Lecture notebooks grouped by week
     week3/ ... week9/
+    10. Class Notebooks-20261123/  # Week 10 course material
     shared/prerun/        # Shared course pre-run tables
   results/
     runs.csv              # Append-only scoreboard
@@ -122,6 +124,7 @@ These findings were documented in `notebooks/week3/01_eda_introduction.ipynb`. D
 | 7 | Added Gradient Boosting, HistGradientBoosting and Naive Bayes, eight evaluation metrics, OOF probabilities and confusion matrices, and a ROC-AUC scoreboard with untuned and nested results. |
 | 8 | Added XGBoost and cached fold-local selection, compared selection on/off and vote/kbest/from_model with corrected tests, and measured the selectors' full-run times. |
 | 9 | Option A: added an Adult income config, dataset-independent fairness reporting, and row-preserving prediction export while retaining the COMPAS entry point. |
+| 10 | Compared four imputers, saved the fitted pipeline and added CSV prediction. Completed B1-B4: multiple imputation, categorical inputs, forest proximities and prediction checks. |
 
 __________
 
@@ -518,3 +521,115 @@ python main.py config_adult.yaml
 ```
 
 Adult reports and predictions are saved separately in `results_adult/`.
+
+
+__________
+
+**Week 10**:
+
+This week, I added more ways to fill missing values and a way to save the model and use it on new data. I kept cleaning.py and preprocess.py separate, as in the previous weeks. The imputer can now be changed in config.yaml, and predict.py uses the saved pipeline without needing to train it again.
+
+### *A1: Comparing the imputers*
+
+For this challenge, I compared median, KNN, iterative imputation and random-forest imputation. I added _NUMERIC_IMPUTERS in src/preprocess.py and the new options under preprocessing.imputation in config.yaml. Scaling still happens before imputation, and both are fitted only on the training rows of each fold. The categorical columns keep mode imputation and one-hot encoding.
+
+I used the same XGBoost parameters, kbest with k: 5 and the same 5 stratified folds with random_state: 42. Tuning was off for all four versions, so only the imputer changed. KNN used 5 neighbors, the iterative methods used a maximum of 10 iterations, and the forest used 50 trees per column. The 1,443 reserved test rows were kept aside.
+
+| Imputation | CV ROC-AUC (mean +/- std) | Total run time |
+|---|---|---|
+| Median | 0.6921 +/- 0.0113 | 3.4 s |
+| KNN | 0.6925 +/- 0.0112 | 12.7 s |
+| Iterative | 0.6888 +/- 0.0098 | 11.4 s |
+| Random forest | 0.6917 +/- 0.0137 | 321.2 s |
+
+KNN had the highest average ROC-AUC, but the difference from median was only 0.000465. The corrected paired test gave p = 0.8937 and a 95% interval of [-0.009540, +0.008609] for median minus KNN, so I cannot say KNN was clearly better. For this reason, **median stays in config.yaml**, since it is simpler and the other methods did not show enough improvement to justify the extra time.
+
+I compared all six pairs with corrected_paired_test(), which accounts for the folds sharing training data. None showed a clear difference, and all Holm-adjusted p-values were at least 0.7975. This does not mean the methods are equivalent; the full results are in [corrected_tests.json](results/week10/corrected_tests.json).
+
+The times are for the whole run, including CV, the final fit and saving the results, and were measured once per method. Both iterative methods reached the 10-iteration limit with convergence warnings. Also, these models were not tuned, so their scores should not be compared directly with the tuned Week 8 results.
+
+### *A2: Saving the model and predicting new people*
+
+Before this change, the final fitted pipeline was lost when main.py finished. I added joblib saving and output.model_path, so it is now saved in models/model.joblib. The cleaning settings are saved next to it in model.config.json, so changing config.yaml later does not change how that saved model prepares the data.
+
+To train and then predict:
+
+```bash
+python main.py
+python predict.py data/compas_new_people.csv predictions.csv
+```
+
+The output has the person's id, the probability of class 1 and the prediction at a threshold of 0.5. I tested compas_new_people.csv and got **20 predictions for the 20 input rows**, in the same order. The missing values were filled, the unseen charge degree did not cause an error, and both copies of the duplicate person were kept with the same prediction.
+
+The models folder and the default predictions.csv are ignored by Git, so they need to be generated locally. Joblib files should only be loaded from trusted sources and with the same library versions used for training.
+
+### *Running the comparison:*
+
+```bash
+python -m scripts.run_week10
+python predict.py data/compas_new_people.csv predictions.csv
+```
+
+The comparison script saves all four models and also puts the median model at models/model.joblib, ready for prediction. The reports, settings, fold scores and corrected tests are in results/week10/, and the four runs were added to results/runs.csv. An example output is in [example_predictions.csv](results/week10/example_predictions.csv).
+
+### *B1: Multiple imputation*
+
+For this challenge, I trained 5 pipelines with IterativeImputer(sample_posterior=True), using seeds 42 to 46, and averaged their probabilities. This gives different guesses for the missing values, instead of using only one completed dataset. Each pipeline fits its own imputer, selector and model inside the training fold.
+
+I kept the same untuned XGBoost, kbest with k: 5 and the same 5 folds as the single iterative version.
+
+| Version | CV ROC-AUC (mean +/- std) | Total run time |
+|---|---|---|
+| Single iterative imputation | 0.6888 +/- 0.0098 | 8.2 s |
+| Multiple imputation, 5 pipelines | 0.6977 +/- 0.0131 | 53.9 s |
+
+Multiple imputation had the better average score, with an increase of 0.008936. However, the corrected test gave p = 0.0691 and a 95% interval of [-0.001118, +0.018991] for multiple minus single, so the improvement is still uncertain. It also took about 6.6 times as long. For now, I would keep median for the normal pipeline, but this is an option worth testing further.
+
+To use it, set numeric_strategy to iterative, sample_posterior to true and multiple_imputation.enabled to true. The number of pipelines is set with multiple_imputation.n_imputations. The saved model keeps all of them, and predict.py averages their probabilities. The feature list in the report is from the first pipeline; each of the others selects its own features.
+
+### *B2: Letting the imputer see the categories*
+
+I added include_categories so the imputer can also use the encoded categorical columns. For example, age_cat gives useful information about age, but the numeric-only imputer could not see it before. The category modes and encoding are still learned only from the training rows.
+
+To check this, I hid 200 known values of age and 200 of priors_count in the first validation fold. I fitted the imputers on the training fold and compared their guesses with the original values. Both versions used the five original numeric columns; the version with categories also used age_cat, sex and c_charge_degree. I left out the engineered features and missingness flags for this check, so formulas involving the hidden values could not give away the answer.
+
+| Imputer | Age MAE, numeric only | Age MAE, with categories | Priors MAE, numeric only | Priors MAE, with categories |
+|---|---|---|---|---|
+| Median baseline | 8.935 | 8.935 | 2.960 | 2.960 |
+| KNN | 10.597 | 4.561 | 4.759 | 3.517 |
+| Iterative | 9.016 | 4.523 | 3.064 | 2.784 |
+| Random forest | 9.497 | 4.582 | 2.813 | 2.724 |
+
+Adding the categories reduced the age error by about half for iterative and random-forest imputation, and also helped KNN. The improvement for priors_count was smaller, and KNN still did worse than median there. Median only uses the column itself, so its result does not change. This check only uses artificial gaps in one fold, so the error on the real missing values may be different.
+
+I also compared the full pipeline with and without categories using iterative imputation. With categories, the CV ROC-AUC was **0.6925 +/- 0.0135**, compared with **0.6888 +/- 0.0098** without them. The corrected test gave p = 0.4758 and a 95% interval of [-0.009313, +0.016669] for with minus without categories. The guesses improved, but I cannot say the model's score clearly improved.
+
+The B1 and B2 model comparisons use separate corrected tests without adjusting for multiple comparisons. The iterative methods still have the 10-iteration limit and can give convergence warnings.
+
+### *B3: Random-forest proximities*
+
+I added ForestProximityImputer in src/imputation.py. It uses forest.apply() to find which training rows end up in the same leaves as the new person. Rows that share more leaves get more weight when filling the missing priors_count. If no leaves are shared, it uses the training median, and values that were already present are kept.
+
+In my version, the forest learns to predict priors_count from the other numeric features. It does not use the recidivism label or engineered features derived from priors_count, so it can also work on new people whose label is unknown. Missing predictor values are filled with medians from the training donors.
+
+On the same 200 hidden priors_count values, it obtained **MAE = 2.895**, compared with **2.813** for iterative random-forest imputation and **2.960** for median. It was slightly better than median, but it did not beat the iterative forest in this check. It took about 0.4 seconds, compared with 9.4 seconds for the numeric-only iterative forest, although that version also filled the hidden age values.
+
+This can be used in the normal pipeline with numeric_strategy: forest_proximity. The remaining gaps use median/mode imputation. I also tested saving and loading this pipeline and predicting all 20 new people, so it can run through predict.py without needing their labels.
+
+### *B4: A safer predict.py*
+
+I added a check for missing input columns, including the ones needed for the engineered features. If a required column is missing, predict.py now stops with a clear message. Training also saves the Python and library versions next to the model in a .versions.json file. When that file is present, predict.py checks the versions before loading.
+
+The tests check that the 20 input rows are kept, the duplicate people get the same prediction in the example, and missing columns or different library versions give an error. I also tested the multiple-imputation average, the different seeds and saving and loading the models. All **29 tests passed**.
+
+### *Running the optional comparisons:*
+
+```bash
+python -m scripts.run_week10_extras
+python predict.py data/compas_new_people.csv predictions.csv --model models/week10/extras/multiple_5.joblib
+python -m unittest discover -s tests
+```
+
+The optional results are saved in results/week10/extras/, including the reports, settings, fold scores, corrected tests and hidden-value guesses. The three model runs were added to results/runs.csv, and their saved models are in models/week10/extras/. All three produced 20 predictions after loading. The reserved test set was kept aside for all these comparisons.
+
+Sorry for the delay.

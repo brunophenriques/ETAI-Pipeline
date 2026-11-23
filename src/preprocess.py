@@ -13,12 +13,28 @@ import numpy as np
 import pandas as pd
 
 from sklearn.compose import ColumnTransformer
-from sklearn.impute import KNNImputer, SimpleImputer
+from sklearn.experimental import enable_iterative_imputer  # noqa: F401
+from sklearn.impute import IterativeImputer, KNNImputer, SimpleImputer
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, RobustScaler, StandardScaler
 
 from src.cleaning import clean_dataset
+
+
+_NUMERIC_IMPUTERS = {
+    "median": lambda cfg, seed: SimpleImputer(strategy="median", keep_empty_features=True),
+    "mean": lambda cfg, seed: SimpleImputer(strategy="mean", keep_empty_features=True),
+    "knn": lambda cfg, seed: KNNImputer(n_neighbors=cfg.get("n_neighbors", 5), keep_empty_features=True),
+    "iterative": lambda cfg, seed: IterativeImputer(max_iter=cfg.get("max_iter", 10), random_state=seed,
+        sample_posterior=cfg.get("sample_posterior", False), keep_empty_features=True),
+    "random_forest": lambda cfg, seed: IterativeImputer(
+        estimator=RandomForestRegressor(n_estimators=cfg.get("n_estimators", 50), random_state=seed, n_jobs=1),
+        max_iter=cfg.get("max_iter", 10), random_state=seed, keep_empty_features=True),
+    "most_frequent": lambda cfg, seed: SimpleImputer(strategy="most_frequent", keep_empty_features=True),
+    "constant": lambda cfg, seed: SimpleImputer(strategy="constant", keep_empty_features=True),
+}
 
 
 def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -170,16 +186,27 @@ def build_feature_preprocessor(
             f"Unknown scaler: {scaler_name}. Options: {list(scaler_factories)}"
         )
 
-    strategy = preprocessing_config.get("numerical_imputation", "median")
+    settings = {**preprocessing_config, **preprocessing_config.get("imputation", {})}
+    strategy = settings.get("numeric_strategy", settings.get("numerical_imputation", "median"))
+    if strategy == "forest_proximity":
+        from copy import deepcopy
+        from src.imputation import ForestProximityImputer
+        remaining = deepcopy(preprocessing_config)
+        remaining.setdefault("imputation", {}).update(numeric_strategy="median", include_categories=False)
+        return Pipeline([
+            ("proximity", ForestProximityImputer(n_estimators=settings.get("n_estimators", 50),
+                                                random_state=preprocessing_config.get("random_state", 42))),
+            ("remaining", build_feature_preprocessor(X_train, remaining)),
+        ])
     if strategy == "knn":
         if scaler_name == "none":
             raise ValueError("KNN imputation requires scaler: standard or robust.")
-        neighbors = preprocessing_config.get("n_neighbors", 5)
+        neighbors = settings.get("n_neighbors", 5)
         if isinstance(neighbors, bool) or not isinstance(neighbors, int) or neighbors < 1:
             raise ValueError("n_neighbors must be a positive integer.")
-        imputer = KNNImputer(n_neighbors=neighbors, keep_empty_features=True)
-    else:
-        imputer = SimpleImputer(strategy=strategy, keep_empty_features=True)
+    if strategy not in _NUMERIC_IMPUTERS:
+        raise ValueError(f"Unknown numeric imputer: {strategy}. Options: {list(_NUMERIC_IMPUTERS)}")
+    imputer = _NUMERIC_IMPUTERS[strategy](settings, preprocessing_config.get("random_state", 42))
 
     numerical_pipeline = Pipeline([
         ("scaler", scaler_factories[scaler_name]()),
@@ -190,10 +217,7 @@ def build_feature_preprocessor(
         (
             "imputer",
             SimpleImputer(
-                strategy=preprocessing_config.get(
-                    "categorical_imputation",
-                    "most_frequent"
-                )
+                strategy=settings.get("categorical_strategy", preprocessing_config.get("categorical_imputation", "most_frequent"))
             )
         ),
         (
@@ -205,6 +229,17 @@ def build_feature_preprocessor(
             )
         )
     ])
+
+    if settings.get("include_categories", False):
+        if strategy not in {"knn", "iterative", "random_forest"}:
+            raise ValueError("include_categories requires knn, iterative or random_forest.")
+        # Fit category modes/encoding on training rows before joint imputation.
+        # Imputed numeric values are kept alongside the observed encoded categories.
+        encoded = ColumnTransformer([
+            ("numerical", scaler_factories[scaler_name](), numerical_columns),
+            ("categorical", categorical_pipeline, categorical_columns),
+        ])
+        return Pipeline([("encode", encoded), ("imputer", imputer)])
 
     return ColumnTransformer([
         (

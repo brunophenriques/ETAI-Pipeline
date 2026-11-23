@@ -56,6 +56,7 @@ class MainTuningTests(unittest.TestCase):
                         redirect_stdout(io.StringIO()),
                     ):
                         config["output"]["results_dir"] = output_dir
+                        config["output"]["model_path"] = output_dir + "/model.joblib"
                         main.main()
 
                     report = save.call_args.args[2]

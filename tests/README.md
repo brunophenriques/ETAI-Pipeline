@@ -11,6 +11,8 @@ feature selection, evaluation, tuning and entry-point routing. Adult checks
 also verify the expected cleaning counts, feature roles, row preservation,
 optional COMPAS fairness baseline and sequential model configuration.
 
+Week 10 checks exercise all four imputers on unseen missing values, serialize and reload a fitted pipeline, preserve all 20 example rows and duplicate people, and reject a missing required column. Optional checks cover independent posterior seeds and probability averaging, category-assisted imputation, proximity donors, and saved library versions with CLI rejection of a mismatch.
+
 Tests use small synthetic inputs where possible. The Adult cleaning check reads
 the supplied local CSVs. Tests do not launch full experiment searches or evaluate
 the reserved test set.

@@ -23,3 +23,7 @@ test_run.log
 test_verified.log
 results/week7/smoke/
 results/week8/smoke/
+
+models/
+predictions.csv
+!results/week10/

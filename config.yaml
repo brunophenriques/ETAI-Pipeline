@@ -107,9 +107,18 @@ preprocessing:
   # KNN requires standard or robust so distances use comparable units.
   scaler: "standard"
 
-  # Numeric strategies: median, mean, most_frequent, constant, or knn.
+  # Legacy strategy remains supported; imputation.numeric_strategy takes precedence.
   numerical_imputation: "median"
-  n_neighbors: 5  # Used only by knn; uniform-weight neighbor averaging.
+  n_neighbors: 5  # Legacy KNN setting.
+  random_state: 42
+  imputation:
+    numeric_strategy: "median"  # median | mean | knn | iterative | random_forest | forest_proximity
+    categorical_strategy: "most_frequent"
+    n_neighbors: 5
+    max_iter: 10
+    n_estimators: 50
+    include_categories: false  # B2: encode categories before numeric imputation.
+    sample_posterior: false  # B1: true with iterative and multiple_imputation enabled.
 
   # Mode for sex and c_charge_degree
   categorical_imputation: "most_frequent"
@@ -288,6 +297,11 @@ tuning:
         choices: ["gini", "entropy"]
 
 
+multiple_imputation:
+  enabled: false
+  n_imputations: 5
+  random_state: 42
+
 imputation_comparison:
   # Fixed in advance; all holdouts come from development data only.
   holdout_seeds: [0, 42, 123]
@@ -361,6 +375,7 @@ model:
 
 
 output:
-  results_dir: "results/week8"
+  model_path: "models/model.joblib"
+  results_dir: "results/week10"
   scoreboard: "results/runs.csv"
   layout: "selection"  # Separate selection_on/ and selection_off/ runs.

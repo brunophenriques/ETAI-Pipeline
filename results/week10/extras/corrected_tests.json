@@ -1,0 +1,22 @@
+{
+  "multiple_5_minus_single": {
+    "corrected_standard_error": 0.0036214285143837815,
+    "degrees_of_freedom": 4,
+    "two_sided_p_value": 0.06912371530185127,
+    "ci95": [
+      -0.0011184149330336225,
+      0.018990980012135512
+    ],
+    "mean_difference": 0.008936282539550944
+  },
+  "with_categories_minus_single": {
+    "corrected_standard_error": 0.004678935471442848,
+    "degrees_of_freedom": 4,
+    "two_sided_p_value": 0.47577363261606437,
+    "ci95": [
+      -0.009312786201184135,
+      0.016668828773263516
+    ],
+    "mean_difference": 0.00367802128603969
+  }
+}

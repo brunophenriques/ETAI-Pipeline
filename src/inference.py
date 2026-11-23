@@ -4,6 +4,19 @@ from pathlib import Path
 
 import pandas as pd
 
+
+def library_versions():
+    import platform
+    from importlib.metadata import version
+    return {"python": platform.python_version(), **{name: version(name) for name in
+            ("scikit-learn", "xgboost", "numpy", "pandas", "joblib")}}
+
+
+def save_library_versions(model_path):
+    import json
+    Path(model_path).with_suffix(".versions.json").write_text(
+        json.dumps(library_versions(), indent=2), encoding="utf-8")
+
 from src.cleaning import (missing_value_diagnostics, valid_numerical_ranges,
                           canonicalize_categories, drop_redundant_columns)
 from src.preprocess import (add_engineered_features, add_missingness_indicators,
@@ -18,6 +31,14 @@ def prepare_new_rows(raw, feature_columns, config):
     out = canonicalize_categories(out, diagnostics)
     out = drop_redundant_columns(out, diagnostics)
     settings = config["preprocessing"]
+    engineered = {"priors_per_adult_year", "juvenile_offenses_total", "age_x_priors"}
+    required = {column for column in feature_columns
+                if column not in engineered and not column.endswith("_was_missing")}
+    if settings.get("engineered_features", {}).get("enabled", False):
+        required.update({"priors_count", "age", "juv_fel_count", "juv_misd_count", "juv_other_count"})
+    missing = required - set(out.columns)
+    if missing:
+        raise ValueError(f"Prediction data is missing features: {sorted(missing)}")
     if settings.get("engineered_features", {}).get("enabled", False):
         out = add_engineered_features(out)
     out = add_missingness_indicators(out, settings.get("missing_indicator_columns", []))

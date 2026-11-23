@@ -155,10 +155,16 @@ def selection_search_space(selection_config: dict) -> dict:
     return dict(selection_config.get("search_space", {})) if method == "vote" else {}
 
 
-def build_pipeline(feature_preprocessor, model_config: dict, selection_config=None, memory=None) -> Pipeline:
+def build_pipeline(feature_preprocessor, model_config: dict, selection_config=None, memory=None,
+                   multiple_imputation=None) -> Pipeline:
     """Combine an unfitted feature preprocessor and classifier."""
     steps = [("preprocessing", feature_preprocessor)]
     if selection_config and selection_config.get("enabled", False):
         steps.append(("select", build_selector(selection_config)))
     steps.append(("classifier", build_model(model_config)))
+    if multiple_imputation and multiple_imputation.get("enabled", False):
+        from src.imputation import MultipleImputationPipeline
+        return MultipleImputationPipeline(steps, memory=memory,
+            n_imputations=multiple_imputation.get("n_imputations", 5),
+            random_state=multiple_imputation.get("random_state", 42))
     return Pipeline(steps, memory=memory)

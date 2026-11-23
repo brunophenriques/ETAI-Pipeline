@@ -1,0 +1,106 @@
+Numeric imputer: iterative
+Model: xgboost; selection: roc_auc; development rows: 5771
+Classification report (development set, out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.66      0.77      0.71      3170
+           1       0.65      0.52      0.58      2601
+
+    accuracy                           0.66      5771
+   macro avg       0.65      0.64      0.64      5771
+weighted avg       0.66      0.66      0.65      5771
+
+Confusion matrix (rows=true, columns=predicted; labels=[0, 1]):
+[[2430  740]
+ [1243 1358]]
+False positive rate by race (development set, out-of-fold predictions)
+(share of true class 0 rows predicted as class 1)
+
+  Our model:
+    African-American     FPR = 0.29  (n=1420)
+    Asian                FPR = 0.14  (n=21)
+    Caucasian            FPR = 0.19  (n=1161)
+    Hispanic             FPR = 0.18  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.20  (n=185)
+    Unknown              FPR = 0.20  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+Cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation    gap  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision
+    1 0.8220      0.6922 0.1297    0.6571             0.6443     0.6528  0.5125 0.5742   0.5355   0.6922             0.6418
+    2 0.8206      0.6708 0.1498    0.6464             0.6340     0.6346  0.5077 0.5641   0.5288   0.6708             0.6194
+    3 0.8224      0.6948 0.1276    0.6586             0.6478     0.6452  0.5385 0.5870   0.5569   0.6948             0.6637
+    4 0.8043      0.6968 0.1075    0.6551             0.6451     0.6374  0.5442 0.5871   0.5606   0.6968             0.6838
+    5 0.8176      0.7077 0.1099    0.6646             0.6505     0.6684  0.5077 0.5770   0.5333   0.7077             0.6608
+
+accuracy             0.6564 +/- 0.0066
+balanced_accuracy    0.6443 +/- 0.0063
+precision            0.6477 +/- 0.0136
+recall               0.5221 +/- 0.0178
+f1                   0.5779 +/- 0.0097
+fbeta_2              0.5430 +/- 0.0146
+roc_auc              0.6925 +/- 0.0135
+average_precision    0.6539 +/- 0.0243
+CV roc_auc (mean +/- std): 0.692 +/- 0.013
+Mean train-validation gap: +0.125
+
+No-model floor (dummy, same folds): roc_auc = 0.5000
+
+Classification report (development set, out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.66      0.77      0.71      3170
+           1       0.65      0.52      0.58      2601
+
+    accuracy                           0.66      5771
+   macro avg       0.65      0.64      0.64      5771
+weighted avg       0.66      0.66      0.65      5771
+
+Confusion matrix (rows=true, columns=predicted; labels=[0, 1]):
+[[2430  740]
+ [1243 1358]]
+
+False positive rate by race (development set, out-of-fold predictions)
+(share of true class 0 rows predicted as class 1)
+
+  Our model:
+    African-American     FPR = 0.29  (n=1420)
+    Asian                FPR = 0.14  (n=21)
+    Caucasian            FPR = 0.19  (n=1161)
+    Hispanic             FPR = 0.18  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.20  (n=185)
+    Unknown              FPR = 0.20  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+
+Fitted pipeline saved to models\week10\extras\with_categories.joblib
+
+Features kept: 5/14: numerical__priors_count, numerical__age, numerical__priors_per_adult_year, numerical__juvenile_offenses_total, numerical__age_x_priors
+
+Final pipeline refit on 5771 development rows.
+Reserved test set: 1443 rows (not evaluated).
+
+
+Scoreboard (same data, features, folds and selection metric):
+  model   imputer  tuned selection_method  untuned     mean      std  floor
+xgboost iterative  False            kbest 0.692479 0.692479 0.013485    0.5
+Full results saved to results\week10\extras\with_categories\xgboost_20261123_215358_126013.txt
+Features kept: 5/14: numerical__priors_count, numerical__age, numerical__priors_per_adult_year, numerical__juvenile_offenses_total, numerical__age_x_priors

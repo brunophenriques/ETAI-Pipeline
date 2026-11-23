@@ -47,6 +47,8 @@ def compare_imputation(config: dict) -> dict:
     for strategy in ["median", "knn"]:
         prep_cfg = copy.deepcopy(config["preprocessing"])
         prep_cfg["numerical_imputation"] = strategy
+        if "imputation" in prep_cfg:
+            prep_cfg["imputation"]["numeric_strategy"] = strategy
         pipe = Pipeline([
             ("preprocessing", build_feature_preprocessor(X, prep_cfg)),
             ("classifier", build_model(config["model"])),

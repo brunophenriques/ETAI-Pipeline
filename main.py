@@ -1,4 +1,5 @@
 """Development-only multimetric CV, nested tuning, and an append-only scoreboard."""
+import joblib
 import hashlib
 import json
 from copy import deepcopy
@@ -59,8 +60,17 @@ def _run(cache_dir, config_path="config.yaml", config=None):
     # Materialized once: baseline, floor and nested evaluation share validation rows.
     folds = list(cv.split(X_dev, y_dev))
     n_jobs = cv_config.get("n_jobs", 1)
-    model = build_pipeline(preprocessor, config["model"], selection_config, memory=cache_dir)
+    multiple = config.get("multiple_imputation", {})
+    if multiple.get("enabled", False):
+        settings = config["preprocessing"].get("imputation", {})
+        if settings.get("numeric_strategy") != "iterative" or not settings.get("sample_posterior", False):
+            raise ValueError("Multiple imputation requires iterative with sample_posterior: true.")
+    model = build_pipeline(preprocessor, config["model"], selection_config, memory=cache_dir,
+                           multiple_imputation=multiple)
     floor_pipeline = build_pipeline(clone(preprocessor), {"type": "dummy", "params": {"strategy": "prior"}})
+    imputation = config["preprocessing"].get("imputation", {})
+    imputer = imputation.get("numeric_strategy", config["preprocessing"].get("numerical_imputation", "median"))
+    print(f"Numeric imputer: {imputer}", flush=True)
     print(f"Model: {model_type}; selection: {selection}; development rows: {len(X_dev)}", flush=True)
     floor_scores, _ = cross_validate_pipeline(
         floor_pipeline, X_dev, y_dev, folds, {selection: scorers[selection]}, selection, n_jobs,
@@ -90,6 +100,17 @@ def _run(cache_dir, config_path="config.yaml", config=None):
     report += "\n\n" + fairness_report(y_dev, proba, extras_dev,
         sensitive_attr=config["data"]["sensitive_attr"], context=context, probabilities=True)
     model.fit(X_dev, y_dev)
+    model_path = Path(config.get("output", {}).get("model_path", "models/model.joblib"))
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    model.set_params(memory=None)
+    for member in getattr(model, "pipelines_", []):
+        member.set_params(memory=None)
+    joblib.dump(model, model_path)
+    # Keep the exact cleaning recipe alongside the fitted pipeline.
+    model_path.with_suffix(".config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
+    from src.inference import save_library_versions
+    save_library_versions(model_path)
+    report += f"\n\nFitted pipeline saved to {model_path}"
     if config["data"].get("prediction_path"):
         from src.inference import predict_new_rows
         prediction_path = predict_new_rows(model, X_dev.columns, config)
@@ -99,6 +120,9 @@ def _run(cache_dir, config_path="config.yaml", config=None):
     kept = selector.get_feature_names_out(names) if selector is not None else names
     kept = kept.tolist()
     feature_summary = f"Features kept: {len(kept)}/{len(names)}: {', '.join(kept)}"
+    if hasattr(model, "pipelines_"):
+        report += (f"\n\nMultiple imputation: averaged probabilities from {len(model.pipelines_)} pipelines. "
+                   "Feature names and selector details below describe the first member; each member fits its own selector.")
     report += "\n\n" + feature_summary
     report += (f"\n\nFinal pipeline refit on {len(X_dev)} development rows.\n"
                f"Reserved test set: {len(X_test)} rows (not evaluated).\n")
@@ -128,8 +152,12 @@ def _run(cache_dir, config_path="config.yaml", config=None):
     identity = dict(data=config["data"], diagnostics=diagnostics,
                     preprocessing=config["preprocessing"], split=config["split"], cv=cv_config,
                     dataset_sha256=hashlib.sha256(data_path.read_bytes()).hexdigest() if data_path.exists() else "synthetic")
+    if multiple.get("enabled", False):
+        identity["multiple_imputation"] = multiple
     comparison_id = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:16]
-    row = dict(run=config["run_id"], model=model_type, tuned=enabled, metric=selection,
+    row = dict(run=config["run_id"], imputer=imputer,
+               n_imputations=multiple.get("n_imputations", 5) if multiple.get("enabled", False) else 1,
+               model=model_type, tuned=enabled, metric=selection,
                comparison_id=comparison_id, data=config["data"]["path"],
                n_trials=tuning["n_trials"] if enabled else 0, floor=floor,
                floor_std=float(floor_scores["validation"].std(ddof=1)),
@@ -162,7 +190,7 @@ def _run(cache_dir, config_path="config.yaml", config=None):
     board = board[board["comparison_id"] == comparison_id].sort_values("mean", ascending=False)
     print(report)
     print("\nScoreboard (same data, features, folds and selection metric):")
-    print(board[["model", "tuned", "selection_method", "untuned", "mean", "std", "floor"]].to_string(index=False))
+    print(board[["model", "imputer", "tuned", "selection_method", "untuned", "mean", "std", "floor"]].to_string(index=False))
     print(f"Full results saved to {path}")
     print(feature_summary)
     return row

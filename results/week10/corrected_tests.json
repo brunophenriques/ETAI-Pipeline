@@ -1,0 +1,71 @@
+{
+  "validation_train_ratio": 0.2500000093843527,
+  "comparisons": {
+    "median_minus_knn": {
+      "corrected_standard_error": 0.00326845494555514,
+      "degrees_of_freedom": 4,
+      "two_sided_p_value": 0.8936513469949637,
+      "ci95": [
+        -0.009540102441208105,
+        0.008609269029084073
+      ],
+      "mean_difference": -0.0004654167060620162,
+      "holm_p_value": 1.0
+    },
+    "median_minus_iterative": {
+      "corrected_standard_error": 0.0017283304691126454,
+      "degrees_of_freedom": 4,
+      "two_sided_p_value": 0.1329140517140572,
+      "ci95": [
+        -0.001545227218353976,
+        0.008052002123910044
+      ],
+      "mean_difference": 0.0032533874527780338,
+      "holm_p_value": 0.7974843102843432
+    },
+    "median_minus_random_forest": {
+      "corrected_standard_error": 0.0024945910798762406,
+      "degrees_of_freedom": 4,
+      "two_sided_p_value": 0.8935394385316071,
+      "ci95": [
+        -0.00657049707000809,
+        0.007281693316376841
+      ],
+      "mean_difference": 0.00035559812318437524,
+      "holm_p_value": 1.0
+    },
+    "knn_minus_iterative": {
+      "corrected_standard_error": 0.003370788129764942,
+      "degrees_of_freedom": 4,
+      "two_sided_p_value": 0.3318289252884788,
+      "ci95": [
+        -0.005640004044704647,
+        0.013077612362384746
+      ],
+      "mean_difference": 0.00371880415884005,
+      "holm_p_value": 1.0
+    },
+    "knn_minus_random_forest": {
+      "corrected_standard_error": 0.003936616727931434,
+      "degrees_of_freedom": 4,
+      "two_sided_p_value": 0.8449825734858745,
+      "ci95": [
+        -0.010108785416058592,
+        0.011750815074551377
+      ],
+      "mean_difference": 0.0008210148292463915,
+      "holm_p_value": 1.0
+    },
+    "iterative_minus_random_forest": {
+      "corrected_standard_error": 0.0035962817107813667,
+      "degrees_of_freedom": 4,
+      "two_sided_p_value": 0.4655466258449357,
+      "ci95": [
+        -0.01288266808240493,
+        0.007087089423217614
+      ],
+      "mean_difference": -0.0028977893295936584,
+      "holm_p_value": 1.0
+    }
+  }
+}

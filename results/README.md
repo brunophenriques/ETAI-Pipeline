@@ -20,6 +20,7 @@ report; the associated JSON, folds, OOF predictions and trials share its filenam
 | `week8/b1/<method>/` | Comparable nested runs of vote, kbest and from_model, with timings |
 | `week8/b1/` comparison files | Timing/score summary and three corrected paired tests with Holm adjustment |
 | `week8/` comparison files | Run summary, paired scores, corrected test and validation |
+| `week10/` | Four untuned imputer runs, paired folds, corrected tests and summary |
 
 Smoke checks are ignored under week7/smoke/ and week8/smoke/. Selected Week 6-8
 evidence is tracked by Git. Reorganization changed paths, not the recorded scores.

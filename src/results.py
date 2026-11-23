@@ -33,14 +33,18 @@ def save_run(results_dir: str, config: dict, report_text: str) -> str:
     timestamp = config.get("run_id") or datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     path = os.path.join(results_dir, f"{config['model']['type']}_{timestamp}.txt")
 
+    prep = config.get("preprocessing", {})
+    imputer = prep.get("imputation", {}).get("numeric_strategy", prep.get("numerical_imputation", "median"))
     header = (
         f"Run: {timestamp}\n"
+        f"Numeric imputer: {imputer}\n"
         f"Model: {config['model']['type']}  params={config['model']['params']}\n"
         f"Reserved test size: {config['split']['test_size']}  "
         f"random_state: {config['split']['random_state']}\n"
         f"CV settings: {config.get('cv', {})}\n"
         f"Preprocessing settings: {config.get('preprocessing', {})}\n"
         f"Feature selection settings: {config.get('feature_selection', {'enabled': False})}\n"
+        f"Multiple imputation settings: {config.get('multiple_imputation', {'enabled': False})}\n"
         f"Tuning settings: {config.get('tuning', {})}\n"
         + "=" * 60 + "\n\n"
     )
