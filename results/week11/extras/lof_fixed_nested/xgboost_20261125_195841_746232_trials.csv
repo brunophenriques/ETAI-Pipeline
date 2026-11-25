@@ -1,0 +1,2 @@
+number,value,datetime_start,datetime_complete,duration,params_classifier__max_depth,user_attrs_fold_scores,user_attrs_std,state
+0,0.6856507803331459,2026-11-25 19:59:12.713085,2026-11-25 19:59:14.830602,0 days 00:00:02.117517,6,"[0.675827323527775, 0.6853840874097984, 0.6957409300618643]",0.009959481670004435,COMPLETE

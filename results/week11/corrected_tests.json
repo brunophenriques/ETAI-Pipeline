@@ -1,0 +1,38 @@
+{
+  "validation_train_ratio": 0.2500000093843527,
+  "comparisons": {
+    "none_minus_isolation_forest": {
+      "corrected_standard_error": 0.0,
+      "degrees_of_freedom": 4,
+      "two_sided_p_value": 1.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "mean_difference": 0.0,
+      "holm_p_value": 1.0
+    },
+    "none_minus_lof": {
+      "corrected_standard_error": 0.0,
+      "degrees_of_freedom": 4,
+      "two_sided_p_value": 1.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "mean_difference": 0.0,
+      "holm_p_value": 1.0
+    },
+    "isolation_forest_minus_lof": {
+      "corrected_standard_error": 0.0,
+      "degrees_of_freedom": 4,
+      "two_sided_p_value": 1.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "mean_difference": 0.0,
+      "holm_p_value": 1.0
+    }
+  }
+}

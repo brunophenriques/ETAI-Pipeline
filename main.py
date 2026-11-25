@@ -47,6 +47,8 @@ def _run(cache_dir, config_path="config.yaml", config=None):
     selection_method = selection_config.get("method", "vote") if selection_enabled else "none"
     if enabled and selection_enabled:
         space.update(selection_search_space(selection_config))
+    if enabled and config.get("anomaly", {}).get("method") == "lof":
+        space.update(config["anomaly"].get("search_space", {}))
 
     raw = load_data(config["data"]["path"])
     X_dev, X_test, y_dev, y_test, extras_dev, extras_test, preprocessor = preprocess(
@@ -66,11 +68,13 @@ def _run(cache_dir, config_path="config.yaml", config=None):
         if settings.get("numeric_strategy") != "iterative" or not settings.get("sample_posterior", False):
             raise ValueError("Multiple imputation requires iterative with sample_posterior: true.")
     model = build_pipeline(preprocessor, config["model"], selection_config, memory=cache_dir,
-                           multiple_imputation=multiple)
+                           multiple_imputation=multiple, anomaly_config=config.get("anomaly"))
     floor_pipeline = build_pipeline(clone(preprocessor), {"type": "dummy", "params": {"strategy": "prior"}})
     imputation = config["preprocessing"].get("imputation", {})
     imputer = imputation.get("numeric_strategy", config["preprocessing"].get("numerical_imputation", "median"))
     print(f"Numeric imputer: {imputer}", flush=True)
+    anomaly_method = config.get("anomaly", {}).get("method", "none")
+    print(f"Anomaly method: {anomaly_method}", flush=True)
     print(f"Model: {model_type}; selection: {selection}; development rows: {len(X_dev)}", flush=True)
     floor_scores, _ = cross_validate_pipeline(
         floor_pipeline, X_dev, y_dev, folds, {selection: scorers[selection]}, selection, n_jobs,
@@ -111,11 +115,16 @@ def _run(cache_dir, config_path="config.yaml", config=None):
     from src.inference import save_library_versions
     save_library_versions(model_path)
     report += f"\n\nFitted pipeline saved to {model_path}"
+    if hasattr(model, "removed_indices_"):
+        report += (f"\nTraining-only anomaly removal: {len(model.removed_indices_)}/{model.n_training_samples_} rows; "
+                   "validation and prediction rows are always preserved.")
     if config["data"].get("prediction_path"):
         from src.inference import predict_new_rows
         prediction_path = predict_new_rows(model, X_dev.columns, config)
         report += f"\n\nNew-row predictions saved to {prediction_path}"
     names = model.named_steps["preprocessing"].get_feature_names_out()
+    if "anomaly" in model.named_steps:
+        names = model.named_steps["anomaly"].get_feature_names_out(names)
     selector = model.named_steps.get("select")
     kept = selector.get_feature_names_out(names) if selector is not None else names
     kept = kept.tolist()
@@ -154,8 +163,12 @@ def _run(cache_dir, config_path="config.yaml", config=None):
                     dataset_sha256=hashlib.sha256(data_path.read_bytes()).hexdigest() if data_path.exists() else "synthetic")
     if multiple.get("enabled", False):
         identity["multiple_imputation"] = multiple
+    if anomaly_method != "none" or config.get("anomaly", {}).get("training_filter", {}).get("enabled", False):
+        identity["anomaly"] = config["anomaly"]
     comparison_id = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:16]
-    row = dict(run=config["run_id"], imputer=imputer,
+    row = dict(run=config["run_id"], imputer=imputer, anomaly=anomaly_method,
+               training_filter=config.get("anomaly", {}).get("training_filter", {}).get("enabled", False),
+               n_training_removed=len(getattr(model, "removed_indices_", [])),
                n_imputations=multiple.get("n_imputations", 5) if multiple.get("enabled", False) else 1,
                model=model_type, tuned=enabled, metric=selection,
                comparison_id=comparison_id, data=config["data"]["path"],
@@ -190,7 +203,7 @@ def _run(cache_dir, config_path="config.yaml", config=None):
     board = board[board["comparison_id"] == comparison_id].sort_values("mean", ascending=False)
     print(report)
     print("\nScoreboard (same data, features, folds and selection metric):")
-    print(board[["model", "imputer", "tuned", "selection_method", "untuned", "mean", "std", "floor"]].to_string(index=False))
+    print(board[["model", "imputer", "anomaly", "tuned", "selection_method", "untuned", "mean", "std", "floor"]].to_string(index=False))
     print(f"Full results saved to {path}")
     print(feature_summary)
     return row

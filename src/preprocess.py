@@ -13,6 +13,10 @@ import numpy as np
 import pandas as pd
 
 from sklearn.compose import ColumnTransformer
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.ensemble import IsolationForest
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import IterativeImputer, KNNImputer, SimpleImputer
 from sklearn.ensemble import RandomForestRegressor
@@ -21,6 +25,51 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, RobustScaler, StandardScaler
 
 from src.cleaning import clean_dataset
+
+
+class AnomalyScore(TransformerMixin, BaseEstimator):
+    """Append unusualness learned from training features, never from labels.
+
+    LOF fit_transform uses training negative_outlier_factor_; transform uses
+    novelty scores for validation and new rows, without refitting the detector.
+    """
+
+    def __init__(self, method="isolation_forest", n_neighbors=20, random_state=None):
+        self.method = method
+        self.n_neighbors = n_neighbors
+        self.random_state = random_state
+
+    def fit(self, X, y=None):
+        X = validate_data(self, X, reset=True)
+        if self.method == "isolation_forest":
+            self.detector_ = IsolationForest(random_state=self.random_state)
+        elif self.method == "lof":
+            if isinstance(self.n_neighbors, bool) or not isinstance(self.n_neighbors, int) or self.n_neighbors < 2:
+                raise ValueError("LOF n_neighbors must be an integer of at least 2.")
+            self.detector_ = LocalOutlierFactor(n_neighbors=self.n_neighbors, novelty=True)
+        else:
+            raise ValueError(f"Unknown anomaly method: {self.method}. Use isolation_forest or lof.")
+        self.detector_.fit(X)
+        return self
+
+    def fit_transform(self, X, y=None, **fit_params):
+        self.fit(X, y)
+        if self.method == "lof":
+            return np.column_stack([X, -self.detector_.negative_outlier_factor_])
+        return self.transform(X)
+
+    def transform(self, X):
+        check_is_fitted(self, "detector_")
+        X = validate_data(self, X, reset=False)
+        return np.column_stack([X, -self.detector_.score_samples(X)])
+
+    def get_feature_names_out(self, input_features=None):
+        check_is_fitted(self, "detector_")
+        if input_features is None:
+            input_features = getattr(self, "feature_names_in_", [f"x{i}" for i in range(self.n_features_in_)])
+        if len(input_features) != self.n_features_in_:
+            raise ValueError("Feature names must match the detector's input columns.")
+        return np.append(np.asarray(input_features, dtype=object), "anomaly_score")
 
 
 _NUMERIC_IMPUTERS = {
@@ -208,10 +257,15 @@ def build_feature_preprocessor(
         raise ValueError(f"Unknown numeric imputer: {strategy}. Options: {list(_NUMERIC_IMPUTERS)}")
     imputer = _NUMERIC_IMPUTERS[strategy](settings, preprocessing_config.get("random_state", 42))
 
-    numerical_pipeline = Pipeline([
+    numeric_steps = []
+    clip = preprocessing_config.get("quantile_clip", {})
+    if clip.get("enabled", False):
+        from src.outliers import QuantileClipper
+        numeric_steps.append(("clip", QuantileClipper(lower=clip.get("lower", .01), upper=clip.get("upper", .99))))
+    numeric_steps += [
         ("scaler", scaler_factories[scaler_name]()),
-        ("imputer", imputer),
-    ])
+    ]
+    numerical_pipeline = Pipeline(numeric_steps + [("imputer", imputer)])
 
     categorical_pipeline = Pipeline([
         (
@@ -236,7 +290,7 @@ def build_feature_preprocessor(
         # Fit category modes/encoding on training rows before joint imputation.
         # Imputed numeric values are kept alongside the observed encoded categories.
         encoded = ColumnTransformer([
-            ("numerical", scaler_factories[scaler_name](), numerical_columns),
+            ("numerical", Pipeline(numeric_steps), numerical_columns),
             ("categorical", categorical_pipeline, categorical_columns),
         ])
         return Pipeline([("encode", encoded), ("imputer", imputer)])

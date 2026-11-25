@@ -38,6 +38,7 @@ def save_run(results_dir: str, config: dict, report_text: str) -> str:
     header = (
         f"Run: {timestamp}\n"
         f"Numeric imputer: {imputer}\n"
+        f"Anomaly settings: {config.get('anomaly', {'method': 'none'})}\n"
         f"Model: {config['model']['type']}  params={config['model']['params']}\n"
         f"Reserved test size: {config['split']['test_size']}  "
         f"random_state: {config['split']['random_state']}\n"

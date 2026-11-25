@@ -1,0 +1,5 @@
+method,top_five_percent,people,reoffended,reoffending_rate
+isolation_forest,False,5481,2385,0.4351395730706076
+isolation_forest,True,290,216,0.7448275862068966
+lof,False,5481,2446,0.4462689290275497
+lof,True,290,155,0.5344827586206896

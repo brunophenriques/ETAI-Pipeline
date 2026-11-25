@@ -5,6 +5,8 @@ The normal single-model entry point remains `python main.py`.
 
 | Experiment | Command | Evidence |
 |---|---|---|
+| Week 11: optional outlier experiments | `python -m scripts.run_week11_extras` | `results/week11/extras/`, train-only removal, clipping and nested LOF-k comparisons |
+| Week 11: anomaly scores | `python -m scripts.run_week11` | `results/week11/`, paired model scores, unusual-group rates and saved-model predictions |
 | Week 10 B1-B4: optional experiments | `python -m scripts.run_week10_extras` | `results/week10/extras/`, ensemble/category scores and hidden-value comparisons |
 | Week 10: four imputers, untuned XGBoost | `python -m scripts.run_week10` | `results/week10/`, paired corrected tests and per-imputer reports |
 | Adult: sequential model comparison | `python -m scripts.run_adult` | `results_adult/<model>/`, `results_adult/runs.csv` |

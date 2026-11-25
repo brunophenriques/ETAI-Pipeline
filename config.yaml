@@ -99,6 +99,10 @@ diagnostics:
 
 
 preprocessing:
+  quantile_clip:
+    enabled: false
+    lower: 0.01
+    upper: 0.99
   # Fixed formulas after cleaning; numeric columns are detected automatically.
   engineered_features:
     enabled: true
@@ -297,6 +301,17 @@ tuning:
         choices: ["gini", "entropy"]
 
 
+anomaly:
+  method: "none"  # none | isolation_forest | lof
+  n_neighbors: 60  # LOF: above the largest identical development group (52).
+  random_state: 42
+  training_filter:
+    enabled: false
+    method: "isolation_forest"
+    fraction: 0.05
+  search_space:
+    anomaly__n_neighbors: {type: int, low: 20, high: 100}
+
 multiple_imputation:
   enabled: false
   n_imputations: 5
@@ -376,6 +391,6 @@ model:
 
 output:
   model_path: "models/model.joblib"
-  results_dir: "results/week10"
+  results_dir: "results/week11"
   scoreboard: "results/runs.csv"
   layout: "selection"  # Separate selection_on/ and selection_off/ runs.

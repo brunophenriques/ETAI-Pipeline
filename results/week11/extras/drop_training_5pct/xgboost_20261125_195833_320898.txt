@@ -1,0 +1,76 @@
+Run: 20261125_195833_320898
+Numeric imputer: median
+Anomaly settings: {'method': 'none', 'n_neighbors': 60, 'random_state': 42, 'training_filter': {'enabled': True, 'method': 'isolation_forest', 'fraction': 0.05}, 'search_space': {'anomaly__n_neighbors': {'type': 'int', 'low': 20, 'high': 100}}}
+Model: xgboost  params={'random_state': 42, 'n_jobs': 1, 'tree_method': 'hist', 'eval_metric': 'logloss'}
+Reserved test size: 0.2  random_state: 42
+CV settings: {'n_splits': 5, 'shuffle': True, 'random_state': 42, 'metrics': ['accuracy', 'balanced_accuracy', 'precision', 'recall', 'f1', 'fbeta_2', 'roc_auc', 'average_precision'], 'selection_metric': 'roc_auc', 'n_jobs': 1}
+Preprocessing settings: {'quantile_clip': {'enabled': False, 'lower': 0.01, 'upper': 0.99}, 'engineered_features': {'enabled': True}, 'scaler': 'standard', 'numerical_imputation': 'median', 'n_neighbors': 5, 'random_state': 42, 'imputation': {'numeric_strategy': 'median', 'categorical_strategy': 'most_frequent', 'n_neighbors': 5, 'max_iter': 10, 'n_estimators': 50, 'include_categories': False, 'sample_posterior': False}, 'categorical_imputation': 'most_frequent', 'missing_indicator_columns': ['priors_count', 'c_charge_degree'], 'extra_columns_to_impute': ['race']}
+Feature selection settings: {'enabled': True, 'method': 'kbest', 'min_votes': 2, 'k': 5, 'threshold': 'mean', 'random_state': 42, 'search_spaces': {'vote': {'select__min_votes': {'type': 'int', 'low': 1, 'high': 3}}, 'kbest': {'select__k': {'type': 'int', 'low': 1, 'high': 14}}, 'from_model': {'select__threshold': {'type': 'categorical', 'choices': ['mean', 'median', '0.5*mean']}}}}
+Multiple imputation settings: {'enabled': False, 'n_imputations': 5, 'random_state': 42}
+Tuning settings: {'enabled': False, 'n_trials': 15, 'n_splits': 5, 'random_state': 42, 'search_spaces': {'xgboost': {'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 500, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.3, 'log': True}, 'classifier__max_depth': {'type': 'int', 'low': 2, 'high': 8}, 'classifier__min_child_weight': {'type': 'float', 'low': 1.0, 'high': 50.0, 'log': True}, 'classifier__gamma': {'type': 'float', 'low': 0.0, 'high': 5.0}, 'classifier__reg_alpha': {'type': 'float', 'low': 1e-08, 'high': 10.0, 'log': True}, 'classifier__reg_lambda': {'type': 'float', 'low': 0.001, 'high': 100.0, 'log': True}, 'classifier__subsample': {'type': 'float', 'low': 0.6, 'high': 1.0}, 'classifier__colsample_bytree': {'type': 'float', 'low': 0.5, 'high': 1.0}}, 'gradient_boosting': {'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 500, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.5, 'log': True}, 'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 6}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__subsample': {'type': 'float', 'low': 0.5, 'high': 1.0}}, 'hist_gradient_boosting': {'classifier__max_iter': {'type': 'int', 'low': 25, 'high': 500, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 0.5, 'log': True}, 'classifier__max_leaf_nodes': {'type': 'int', 'low': 2, 'high': 63, 'log': True}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 5, 'high': 200, 'log': True}, 'classifier__l2_regularization': {'type': 'float', 'low': 1e-06, 'high': 10.0, 'log': True}}, 'naive_bayes': {'classifier__var_smoothing': {'type': 'float', 'low': 1e-12, 'high': 0.01, 'log': True}}, 'adaboost_logistic_regression': {'classifier__estimator__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'adaboost': {'classifier__estimator__max_depth': {'type': 'int', 'low': 1, 'high': 8}, 'classifier__n_estimators': {'type': 'int', 'low': 25, 'high': 400, 'log': True}, 'classifier__learning_rate': {'type': 'float', 'low': 0.01, 'high': 1.0, 'log': True}}, 'oblique_random_forest': {'classifier__estimator__tree__max_depth': {'type': 'int', 'low': 2, 'high': 30}, 'classifier__estimator__tree__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__estimator__project__n_components': {'type': 'int', 'low': 3, 'high': 10}}, 'random_forest': {'classifier__n_estimators': {'type': 'int', 'low': 100, 'high': 500}, 'classifier__max_depth': {'type': 'categorical', 'choices': [None, 3, 5, 8, 12, 20]}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 100, 'log': True}, 'classifier__max_features': {'type': 'categorical', 'choices': ['sqrt', 'log2', None]}}, 'logistic_regression': {'classifier__C': {'type': 'float', 'low': 0.0001, 'high': 100, 'log': True}}, 'decision_tree': {'classifier__max_depth': {'type': 'int', 'low': 1, 'high': 20}, 'classifier__min_samples_leaf': {'type': 'int', 'low': 1, 'high': 200, 'log': True}, 'classifier__criterion': {'type': 'categorical', 'choices': ['gini', 'entropy']}}}}
+============================================================
+
+Cross-validation (5 stratified folds, selection metric: roc_auc)
+ fold  train  validation    gap  accuracy  balanced_accuracy  precision  recall     f1  fbeta_2  roc_auc  average_precision
+    1 0.7870      0.6792 0.1078    0.6294             0.6156     0.6160  0.4741 0.5358   0.4970   0.6792             0.6272
+    2 0.7939      0.6721 0.1217    0.6421             0.6283     0.6334  0.4885 0.5516   0.5119   0.6721             0.6165
+    3 0.7871      0.6941 0.0930    0.6629             0.6505     0.6578  0.5250 0.5840   0.5471   0.6941             0.6658
+    4 0.7827      0.6908 0.0918    0.6577             0.6454     0.6499  0.5212 0.5784   0.5427   0.6908             0.6806
+    5 0.7872      0.7023 0.0849    0.6681             0.6547     0.6700  0.5192 0.5850   0.5437   0.7023             0.6536
+
+accuracy             0.6521 +/- 0.0160
+balanced_accuracy    0.6389 +/- 0.0165
+precision            0.6454 +/- 0.0211
+recall               0.5056 +/- 0.0229
+f1                   0.5670 +/- 0.0221
+fbeta_2              0.5285 +/- 0.0226
+roc_auc              0.6877 +/- 0.0120
+average_precision    0.6487 +/- 0.0266
+CV roc_auc (mean +/- std): 0.688 +/- 0.012
+Mean train-validation gap: +0.100
+
+No-model floor (dummy, same folds): roc_auc = 0.5000
+
+Classification report (development set, out-of-fold predictions):
+              precision    recall  f1-score   support
+
+           0       0.66      0.77      0.71      3170
+           1       0.65      0.51      0.57      2601
+
+    accuracy                           0.65      5771
+   macro avg       0.65      0.64      0.64      5771
+weighted avg       0.65      0.65      0.65      5771
+
+Confusion matrix (rows=true, columns=predicted; labels=[0, 1]):
+[[2448  722]
+ [1286 1315]]
+
+False positive rate by race (development set, out-of-fold predictions)
+(share of true class 0 rows predicted as class 1)
+
+  Our model:
+    African-American     FPR = 0.29  (n=1420)
+    Asian                FPR = 0.14  (n=21)
+    Caucasian            FPR = 0.18  (n=1161)
+    Hispanic             FPR = 0.17  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.18  (n=185)
+    Unknown              FPR = 0.18  (n=66)
+
+  COMPAS's own score:
+    African-American     FPR = 0.45  (n=1420)
+    Asian                FPR = 0.10  (n=21)
+    Caucasian            FPR = 0.23  (n=1161)
+    Hispanic             FPR = 0.23  (n=311)
+    Native American      FPR = 0.17  (n=6)
+    Other                FPR = 0.14  (n=185)
+    Unknown              FPR = 0.33  (n=66)
+
+
+Fitted pipeline saved to models\week11\extras\drop_training_5pct.joblib
+Training-only anomaly removal: 289/5771 rows; validation and prediction rows are always preserved.
+
+Features kept: 5/14: numerical__priors_count, numerical__age, numerical__priors_per_adult_year, numerical__age_x_priors, categorical__age_cat_Greater than 45
+
+Final pipeline refit on 5771 development rows.
+Reserved test set: 1443 rows (not evaluated).

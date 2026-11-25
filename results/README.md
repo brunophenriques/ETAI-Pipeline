@@ -21,6 +21,8 @@ report; the associated JSON, folds, OOF predictions and trials share its filenam
 | `week8/b1/` comparison files | Timing/score summary and three corrected paired tests with Holm adjustment |
 | `week8/` comparison files | Run summary, paired scores, corrected test and validation |
 | `week10/` | Four untuned imputer runs, paired folds, corrected tests and summary |
+| `week11/extras/` | Training-only removal, quantile clipping and paired nested fixed/tuned LOF-k results |
+| `week11/` | None/Isolation Forest/LOF comparison, corrected tests, held-out anomaly scores and reoffending rates; initial k=20 run in `pilot_k20/` |
 
 Smoke checks are ignored under week7/smoke/ and week8/smoke/. Selected Week 6-8
 evidence is tracked by Git. Reorganization changed paths, not the recorded scores.

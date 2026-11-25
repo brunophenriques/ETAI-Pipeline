@@ -1,0 +1,32 @@
+{
+  "drop_training_5pct_minus_baseline": {
+    "corrected_standard_error": 0.0021330195217927474,
+    "degrees_of_freedom": 4,
+    "two_sided_p_value": 0.1119720231462159,
+    "ci95": [
+      -0.010256266013818956,
+      0.0015881572073266651
+    ],
+    "mean_difference": -0.004334054403246146
+  },
+  "clip_1_99_minus_baseline": {
+    "corrected_standard_error": 0.0012543268989234969,
+    "degrees_of_freedom": 4,
+    "two_sided_p_value": 0.05913479063285933,
+    "ci95": [
+      -0.0067621083391130755,
+      0.00020303121855506532
+    ],
+    "mean_difference": -0.003279538560279005
+  },
+  "lof_tuned_k_minus_lof_fixed_nested": {
+    "corrected_standard_error": 0.0,
+    "degrees_of_freedom": 4,
+    "two_sided_p_value": 1.0,
+    "ci95": [
+      0.0,
+      0.0
+    ],
+    "mean_difference": 0.0
+  }
+}

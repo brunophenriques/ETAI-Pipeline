@@ -125,6 +125,7 @@ These findings were documented in `notebooks/week3/01_eda_introduction.ipynb`. D
 | 8 | Added XGBoost and cached fold-local selection, compared selection on/off and vote/kbest/from_model with corrected tests, and measured the selectors' full-run times. |
 | 9 | Option A: added an Adult income config, dataset-independent fairness reporting, and row-preserving prediction export while retaining the COMPAS entry point. |
 | 10 | Compared four imputers, saved the fitted pipeline and added CSV prediction. Completed B1-B4: multiple imputation, categorical inputs, forest proximities and prediction checks. |
+| 11 | Compared anomaly scores, training-only removal and quantile clipping, checked unusual groups, and tested nested tuning of LOF neighbours. |
 
 __________
 
@@ -633,3 +634,87 @@ python -m unittest discover -s tests
 The optional results are saved in results/week10/extras/, including the reports, settings, fold scores, corrected tests and hidden-value guesses. The three model runs were added to results/runs.csv, and their saved models are in models/week10/extras/. All three produced 20 predictions after loading. The reserved test set was kept aside for all these comparisons.
 
 Sorry for the delay.
+
+__________
+
+**Week 11**:
+
+### *My guess before running the comparison*
+
+I think the anomaly score might help a little, but I do not expect a big improvement. XGBoost already uses age and the previous-offence counts, so the score may repeat information the model can already find. I also do not expect the most unusual people to always be the ones who reoffend: someone can have an unusual combination of features without having a higher risk. I will compare no score, Isolation Forest and LOF on the same development folds, keeping the test set aside.
+
+
+### *Anomaly scores*
+
+This week, I added AnomalyScore in src/preprocess.py and the anomaly settings in config.yaml. The score is added after preprocessing and before feature selection, so kbest can keep it or drop it. Each detector is fitted only on the training rows of the fold, without using the recidivism label.
+
+For LOF, I used novelty=True so it also works on new people. Training rows use negative_outlier_factor_, while validation and new rows use score_samples(). I first tried 20 neighbours, but my preprocessed data had groups of up to 52 identical people. I changed it to **60 neighbours** so the neighbourhood is larger than those groups. The first run is kept in results/week11/pilot_k20/.
+
+### *Are the people who reoffend the outliers?*
+
+I scored the validation rows and compared the most unusual 5% in each fold with everyone else. This gave 290 people in the top group and 5,481 in the remaining group.
+
+| Detector | Reoffending in the top 5% | Reoffending in the remaining people |
+|---|---|---|
+| Isolation Forest | 74.5% (216/290) | 43.5% (2,385/5,481) |
+| LOF, 60 neighbours | 62.1% (180/290) | 44.2% (2,421/5,481) |
+
+The unusual people did reoffend more often, especially with Isolation Forest, so my guess was only partly right. Still, most people who reoffended were outside that small group. Being unusual does not mean the record is wrong or should be deleted.
+
+### *Did it help the model?*
+
+I kept untuned XGBoost, median imputation, kbest with k: 5 and the same 5 stratified folds with seed 42. Only the anomaly method changed.
+
+| Anomaly method | CV ROC-AUC (mean +/- std) | Total run time |
+|---|---|---|
+| None | 0.6921 +/- 0.0113 | 2.3 s |
+| Isolation Forest | 0.6921 +/- 0.0113 | 4.3 s |
+| LOF, 60 neighbours | 0.6921 +/- 0.0113 | 10.5 s |
+
+All three gave exactly the same predictions. I checked the selected features, and kbest dropped anomaly_score in every fold for both detectors. The corrected comparisons therefore gave a difference of 0 and p = 1.0. This does not mean anomaly scores can never help, only that they did not help with these settings. For now, **anomaly.method stays as none**.
+
+I also saved and loaded each model and got **20 predictions for the 20 new people**, keeping the order, IDs and duplicate rows. The detector is already inside the saved pipeline, so predict.py does not need to fit it again.
+
+### *Optional 1: Removing anomalies from training*
+
+I added a training-only option that removes the 5% most unusual rows using Isolation Forest. Preprocessing and the detector are fitted on each training fold, then selection and the classifier are fitted on the remaining rows. Validation and new people are never removed.
+
+This is controlled by anomaly.training_filter.enabled and fraction in config.yaml. I used a fit-only Pipeline class in src/outliers.py, so this does not need imbalanced-learn.
+
+### *Optional 2: Capping the values*
+
+I added QuantileClipper in src/outliers.py. It learns the 1st and 99th percentiles of each numeric column from the training rows and clips values outside those limits. It runs before scaling and imputation, keeps missing values for the imputer and does not remove people. It can be enabled with preprocessing.quantile_clip.enabled.
+
+I compared both options with the usual pipeline, using the same untuned XGBoost, kbest with k: 5 and the same 5 development folds.
+
+| Version | CV ROC-AUC (mean +/- std) | Corrected p vs usual pipeline |
+|---|---|---|
+| Usual pipeline | 0.6921 +/- 0.0113 | - |
+| Remove the most unusual 5% from training | 0.6877 +/- 0.0120 | 0.1120 |
+| Clip numeric values at 1% and 99% | 0.6888 +/- 0.0130 | 0.0591 |
+
+Neither option improved the average score. Removing anomalies gave a difference of -0.004334, with a 95% interval of [-0.010256, +0.001588]. Clipping gave -0.003280, with an interval of [-0.006762, +0.000203]. These differences are not clear enough to say the options are definitely worse, but I do not have a reason to keep them on. In the final removal fit, 289 of the 5,771 training rows were removed; all validation and new rows were kept.
+
+### *Optional 3: Tuning the LOF neighbours*
+
+I added anomaly__n_neighbors to the search space, from 20 to 100, as in the challenge. I compared fixed k: 60 with tuning using 5 outer folds and 3 inner folds. The search used 6 trials per study. I kept XGBoost and kbest fixed, so this comparison only changes the number of neighbours.
+
+| Version | Nested CV ROC-AUC (mean +/- std) | Total run time |
+|---|---|---|
+| LOF with 60 neighbours | 0.6921 +/- 0.0113 | 34.1 s |
+| LOF with tuned neighbours | 0.6921 +/- 0.0113 | 73.3 s |
+
+Nested CV did not move. All six final trials had the same inner score, so Optuna kept the first value it tried, **50 neighbours**. The five outer searches also chose 50. This does not mean 50 is the best value: it was a tie, and 50 is still below the largest identical group of 52 in the full development data. I keep 60 as the manual setting, and the anomaly step stays off by default. With feature selection in place, changing k did not change the final predictions.
+
+### *Running the comparisons*
+
+```bash
+python -m scripts.run_week11
+python -m scripts.run_week11_extras
+python predict.py data/compas_new_people.csv predictions.csv --model models/week11/extras/drop_training_5pct.joblib
+python -m unittest discover -s tests
+```
+
+The required results are in results/week11/ and the optional results are in results/week11/extras/. They include the reports, exact settings, fold scores and corrected tests. The optional comparisons use separate corrected tests without adjusting for multiple comparisons. Each saved version returned **20 predictions for the 20 input rows**, and all **35 tests passed**. The 1,443 reserved test rows were kept aside throughout.
+
+For now, I keep the usual pipeline: no anomaly score, no training removal and no clipping. None of the options gave a clear improvement with the settings tested here.

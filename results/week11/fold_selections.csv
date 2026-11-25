@@ -1,0 +1,11 @@
+fold,method,anomaly_kept,kept_features
+1,isolation_forest,False,"[""numerical__priors_count"", ""numerical__age"", ""numerical__priors_per_adult_year"", ""numerical__juvenile_offenses_total"", ""numerical__age_x_priors""]"
+1,lof,False,"[""numerical__priors_count"", ""numerical__age"", ""numerical__priors_per_adult_year"", ""numerical__juvenile_offenses_total"", ""numerical__age_x_priors""]"
+2,isolation_forest,False,"[""numerical__priors_count"", ""numerical__age"", ""numerical__priors_per_adult_year"", ""numerical__juvenile_offenses_total"", ""numerical__age_x_priors""]"
+2,lof,False,"[""numerical__priors_count"", ""numerical__age"", ""numerical__priors_per_adult_year"", ""numerical__juvenile_offenses_total"", ""numerical__age_x_priors""]"
+3,isolation_forest,False,"[""numerical__priors_count"", ""numerical__age"", ""numerical__priors_per_adult_year"", ""numerical__juvenile_offenses_total"", ""numerical__age_x_priors""]"
+3,lof,False,"[""numerical__priors_count"", ""numerical__age"", ""numerical__priors_per_adult_year"", ""numerical__juvenile_offenses_total"", ""numerical__age_x_priors""]"
+4,isolation_forest,False,"[""numerical__priors_count"", ""numerical__age"", ""numerical__priors_per_adult_year"", ""numerical__age_x_priors"", ""categorical__age_cat_Greater than 45""]"
+4,lof,False,"[""numerical__priors_count"", ""numerical__age"", ""numerical__priors_per_adult_year"", ""numerical__age_x_priors"", ""categorical__age_cat_Greater than 45""]"
+5,isolation_forest,False,"[""numerical__priors_count"", ""numerical__age"", ""numerical__priors_per_adult_year"", ""numerical__juvenile_offenses_total"", ""numerical__age_x_priors""]"
+5,lof,False,"[""numerical__priors_count"", ""numerical__age"", ""numerical__priors_per_adult_year"", ""numerical__juvenile_offenses_total"", ""numerical__age_x_priors""]"

@@ -156,12 +156,27 @@ def selection_search_space(selection_config: dict) -> dict:
 
 
 def build_pipeline(feature_preprocessor, model_config: dict, selection_config=None, memory=None,
-                   multiple_imputation=None) -> Pipeline:
+                   multiple_imputation=None, anomaly_config=None) -> Pipeline:
     """Combine an unfitted feature preprocessor and classifier."""
     steps = [("preprocessing", feature_preprocessor)]
+    if anomaly_config and anomaly_config.get("method", "none") != "none":
+        from src.preprocess import AnomalyScore
+        steps.append(("anomaly", AnomalyScore(method=anomaly_config["method"],
+            n_neighbors=anomaly_config.get("n_neighbors", 20),
+            random_state=anomaly_config.get("random_state", 42))))
     if selection_config and selection_config.get("enabled", False):
         steps.append(("select", build_selector(selection_config)))
     steps.append(("classifier", build_model(model_config)))
+    removal = (anomaly_config or {}).get("training_filter", {})
+    if removal.get("enabled", False):
+        if multiple_imputation and multiple_imputation.get("enabled", False):
+            raise ValueError("Training-only removal and multiple imputation cannot be combined.")
+        from src.outliers import TrainingOnlyAnomalyPipeline
+        return TrainingOnlyAnomalyPipeline(steps, memory=memory,
+            filter_method=removal.get("method", "isolation_forest"),
+            fraction=removal.get("fraction", .05),
+            n_neighbors=(anomaly_config or {}).get("n_neighbors", 60),
+            random_state=(anomaly_config or {}).get("random_state", 42))
     if multiple_imputation and multiple_imputation.get("enabled", False):
         from src.imputation import MultipleImputationPipeline
         return MultipleImputationPipeline(steps, memory=memory,
